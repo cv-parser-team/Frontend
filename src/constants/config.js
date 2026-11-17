@@ -12,7 +12,7 @@ export const TABS = [
 export const KIND = {
   conflict: ['Conflict', 'red'], duplicate: ['Possible duplicate', 'blue'], link: ['Invalid link', 'red'],
   skill: ['Low confidence', 'amber'], extract: ['Extraction issue', 'amber'], phone: ['Missing information', 'plain'],
-  review: ['Needs review', 'amber'], claimReview: ['Needs review', 'amber'],
+  review: ['Review required', 'blue'], claimReview: ['Pending approval', 'amber'],
 };
 
 // Forms are config-driven: field = [key, label, type, required, extra]; a row with two fields renders side by side.

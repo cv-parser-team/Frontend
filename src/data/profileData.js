@@ -65,6 +65,29 @@ export function getIssues(d) {
     if (value && typeof value === 'object') return JSON.stringify(value);
     return value == null ? '' : String(value);
   };
+  const getReviewTitle = (item) => {
+    const value = (...names) => names
+      .map((name) => formatReviewValue(item.fields?.[name]).trim())
+      .find(Boolean) ?? '';
+    const join = (...parts) => parts.filter(Boolean).join(' · ');
+
+    switch (item.claimType) {
+      case 'employment':
+        return join(value('jobTitle', 'title', 'role'), value('employer', 'company', 'organization')) || 'Verify extracted work experience';
+      case 'education':
+        return join(value('degree', 'qualification'), value('institution', 'school')) || 'Verify extracted education';
+      case 'project':
+        return value('name', 'title', 'projectName') || 'Verify extracted project';
+      case 'certification':
+        return join(value('name', 'title'), value('issuer', 'organization')) || 'Verify extracted certification';
+      case 'language':
+        return join(value('name', 'language'), value('proficiency', 'level')) || 'Verify extracted language';
+      case 'skill':
+        return value('name', 'skill') || 'Verify extracted skill';
+      default:
+        return 'Verify extracted information';
+    }
+  };
 
   d.experience.filter((e) => e.conflict).forEach((e) =>
     push('conflict', 'Work Experience', e.id, `${e.title} · end date`,
@@ -114,7 +137,7 @@ export function getIssues(d) {
       area,
       id: item.reviewItemId,
       documentId: item.documentId,
-      title: `${area} item`,
+      title: getReviewTitle(item),
       text: fields.length
         ? fields.join(' · ')
         : 'Extracted information is awaiting review.',

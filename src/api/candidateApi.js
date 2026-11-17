@@ -139,3 +139,39 @@ export async function getMyCandidateProfile() {
 
   return profile;
 }
+
+export async function getMyClaimMergeCandidates() {
+  const response = await apiRequest("/api/candidates/me/claims/merge-candidates");
+
+  if (!Array.isArray(response?.data)) {
+    throw new Error("Unexpected response while loading merge candidates.");
+  }
+
+  return response.data;
+}
+
+export async function resolveMyClaimBatch(actions) {
+  if (!Array.isArray(actions) || actions.length === 0) {
+    throw new Error("Batch resolution requires at least one action.");
+  }
+
+  const response = await apiRequest("/api/candidates/me/claims/resolve-batch", {
+    method: "POST",
+    body: JSON.stringify({ actions }),
+  });
+
+  if (!Array.isArray(response?.data)) {
+    throw new Error("Unexpected response while resolving claims.");
+  }
+
+  return response.data;
+}
+
+export async function markMyClaimsDifferent(leftClaimId, rightClaimId) {
+  const response = await apiRequest("/api/candidates/me/claims/different", {
+    method: "POST",
+    body: JSON.stringify({ leftClaimId, rightClaimId }),
+  });
+
+  return response?.data;
+}
