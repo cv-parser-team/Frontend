@@ -1,0 +1,432 @@
+/* IssuesSection.css - Styling for merge candidate issues and resolution trigger */
+
+.candidate-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.candidate-card:hover {
+  background: #f8faff;
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+  transform: translateY(-1px);
+}
+
+.candidate-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.candidate-card-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: 0.02em;
+}
+
+.candidate-sources-divider {
+  color: #94a3b8;
+}
+
+.candidate-sources-tag {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.candidate-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.candidate-card-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.candidate-conflict-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b45309;
+  font-weight: 500;
+}
+
+.candidate-alert-icon {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.candidate-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.candidate-needs-choices-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-open-comparison {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-open-comparison:hover {
+  background: #4338ca;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-open-comparison:active {
+  transform: translateY(0);
+}
+
+.candidate-loading {
+  padding: 12px 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .candidate-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .candidate-card-actions {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 6px;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+/* Unified issue cards and category filters */
+.issues-section-content {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.issues-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+
+.pf .issues-filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 29px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #596277;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.pf .issues-filter-button:hover {
+  border-color: #d9ddf8;
+  background: #f7f7fc;
+  color: #4338ca;
+}
+
+.pf .issues-filter-button.active {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.issues-filter-button > span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #edf0f5;
+  color: #596277;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.issues-filter-button.active > span {
+  background: #dfe5ff;
+  color: #4338ca;
+}
+
+.issue-card {
+  --issue-accent: #64748b;
+  --issue-soft: #f8fafc;
+  --issue-border: #dbe1ea;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px 11px 15px;
+  overflow: hidden;
+  border: 1px solid #e1e5ec;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: none;
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf button.issue-card {
+  padding: 11px 12px 11px 15px;
+  border: 1px solid #e1e5ec;
+  background: rgba(255, 255, 255, 0.82);
+  color: #172033;
+}
+
+.issue-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--issue-accent);
+  opacity: 0.38;
+}
+
+.issue-card:hover {
+  transform: none;
+  border-color: #c8ced9;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.issue-card--review {
+  --issue-accent: #d97706;
+  --issue-soft: #fffbeb;
+  --issue-border: #f4dfb2;
+}
+
+.issue-card--extraction {
+  --issue-accent: #0369a1;
+  --issue-soft: #f0f9ff;
+  --issue-border: #bae6fd;
+}
+
+.issue-card--conflict {
+  --issue-accent: #dc2626;
+  --issue-soft: #fef2f2;
+  --issue-border: #fecaca;
+}
+
+.issue-card--duplicate {
+  --issue-accent: #2563eb;
+  --issue-soft: #eff6ff;
+  --issue-border: #bfdbfe;
+}
+
+.issue-card--quality {
+  --issue-accent: #7c3aed;
+  --issue-soft: #f5f3ff;
+  --issue-border: #ddd6fe;
+}
+
+.issue-card--missing {
+  --issue-accent: #64748b;
+  --issue-soft: #f8fafc;
+  --issue-border: #dbe1ea;
+}
+
+.issue-card-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.issue-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.issue-type-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.issue-type-pill {
+  border: 1px solid var(--issue-border);
+  background: var(--issue-soft);
+  color: var(--issue-accent);
+}
+
+.issue-area-label {
+  min-width: 0;
+  color: #7a8497;
+  font-size: 11px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.issue-card-title {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #172033;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.issue-card-description {
+  display: block;
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.issue-card-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.issue-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  color: var(--issue-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.issue-card-action-label {
+  white-space: nowrap;
+}
+
+.pf .btn-open-comparison {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--issue-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pf .btn-open-comparison:hover {
+  border-color: transparent;
+  background: transparent;
+  color: #312e81;
+}
+
+@media (max-width: 700px) {
+  .issue-card,
+  .pf button.issue-card {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 11px 12px 11px 15px;
+  }
+
+  .issue-card-actions {
+    justify-content: space-between;
+    padding-top: 2px;
+    border-top: 0;
+  }
+
+  .pf .btn-open-comparison {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .issues-filter-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf .issues-filter-button {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .issue-card-actions {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .pf .btn-open-comparison {
+    justify-content: center;
+    width: 100%;
+    margin-left: 0;
+  }
+}
