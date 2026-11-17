@@ -1,0 +1,3589 @@
+openapi: 3.0.3
+info:
+  title: LuminaCV API
+  description: API documentation for the LuminaCV backend
+  version: 1.0.0
+servers:
+- url: http://localhost:4000
+  description: Local development
+tags:
+- name: Auth
+  description: Registration and access-token lifecycle
+- name: Users
+  description: User administration and lookup
+- name: Candidates - Profile
+  description: "Candidate profile creation, maintenance, and export"
+- name: Candidates - Claims
+  description: "Claim creation, lifecycle management, and extracted-claim review"
+- name: Candidates - Claim Review
+  description: Duplicate-claim discovery and resolution
+- name: Documents
+  description: Candidate document management
+- name: Extraction
+  description: Document extraction review
+paths:
+  /api/auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register a candidate
+      description: Creates a candidate account and returns a JWT access token.
+      operationId: registerCandidate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_register_body"
+        required: true
+      responses:
+        "201":
+          $ref: "#/components/responses/AuthSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/RegistrationConflict"
+  /api/auth/sign-in:
+    post:
+      tags:
+      - Auth
+      summary: Sign in
+      description: Authenticates a user and returns a JWT access token.
+      operationId: signIn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_signin_body"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/AuthSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "403":
+          $ref: "#/components/responses/AccountUnavailable"
+  /api/auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Log out
+      description: Invalidates all access tokens previously issued to the user.
+      operationId: logout
+      responses:
+        "204":
+          description: Logged out successfully
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/AccountUnavailable"
+      security:
+      - bearerAuth: []
+  /api/candidates/me:
+    get:
+      tags:
+      - Candidates - Profile
+      summary: Get my candidate profile
+      description: Returns the authenticated candidate's profile.
+      operationId: getMyCandidateProfile
+      responses:
+        "200":
+          $ref: "#/components/responses/CandidateProfileSuccess"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Candidates - Profile
+      summary: Create my candidate profile
+      description: Creates a profile for the authenticated candidate.
+      operationId: createMyCandidateProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCandidateProfile"
+        required: true
+      responses:
+        "201":
+          $ref: "#/components/responses/CandidateProfileSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "409":
+          $ref: "#/components/responses/CandidateProfileConflict"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Candidates - Profile
+      summary: Update my candidate profile
+      description: Updates fields on the authenticated candidate's profile.
+      operationId: updateMyCandidateProfile
+      parameters:
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCandidateProfile"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/CandidateProfileSuccess"
+        "400":
+          $ref: "#/components/responses/IfMatchValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/profile:
+    get:
+      tags:
+      - Candidates - Profile
+      summary: Export my structured profile
+      description: Returns profile information and accepted claims only.
+      operationId: exportMyCandidateProfile
+      responses:
+        "200":
+          $ref: "#/components/responses/ExportedProfileSuccess"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims:
+    get:
+      tags:
+      - Candidates - Claims
+      summary: List my claims
+      description: Lists the candidate's claims with optional type and status filters.
+      operationId: listMyClaims
+      parameters:
+      - name: type
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/ClaimType"
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - rejected
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimListSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Candidates - Claims
+      summary: Add a manual claim
+      description: Adds an accepted claim to the authenticated candidate's profile.
+      operationId: createMyClaim
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimInput"
+        required: true
+      responses:
+        "201":
+          $ref: "#/components/responses/ClaimSuccess"
+        "400":
+          $ref: "#/components/responses/ClaimInputError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/merge-candidates:
+    get:
+      tags:
+      - Candidates - Claim Review
+      summary: List suspected duplicate claim pairs
+      description: Lists suspected duplicate pairs without changing or exporting claims.
+      operationId: listMyClaimMergeCandidates
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimMergeCandidateListSuccess"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/merge-proposal:
+    get:
+      tags:
+      - Candidates - Claim Review
+      summary: Compare two claims and build a merge proposal
+      description: Compares two claims and proposes merged values without changing either claim.
+      operationId: getMyClaimMergeProposal
+      parameters:
+      - name: leftClaimId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: rightClaimId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimMergeProposalSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/coalesce:
+    post:
+      tags:
+      - Candidates - Claim Review
+      summary: Safely coalesce pending extracted claims
+      description: Safely combines compatible pending extracted claims while keeping the survivor pending.
+      operationId: coalesceMyPendingClaims
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimPairRequest"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimCoalesceSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/different:
+    post:
+      tags:
+      - Candidates - Claim Review
+      summary: Mark suspected duplicate claims as different
+      description: Suppresses an unchanged pair after the candidate confirms the claims are different.
+      operationId: markMyClaimsDifferent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordClaimsDifferentRequest"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/RecordClaimsDifferentSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/resolve-batch:
+    post:
+      tags:
+      - Candidates - Claim Review
+      summary: Resolve selected claims and duplicate pairs
+      description: Concurrently accepts or merges independent reviewed claims and returns per-item results.
+      operationId: resolveMyClaimBatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimBatchResolutionRequest"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimBatchResolutionSuccess"
+        "400":
+          $ref: "#/components/responses/ClaimBatchInputError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/merge:
+    post:
+      tags:
+      - Candidates - Claim Review
+      summary: Confirm and apply a claim merge
+      description: "Applies a confirmed merge, exports the accepted survivor, and retires the duplicate."
+      operationId: mergeMyConfirmedClaims
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmedClaimMergeRequest"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ConfirmedClaimMergeSuccess"
+        "400":
+          $ref: "#/components/responses/ClaimInputError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/{claimId}:
+    get:
+      tags:
+      - Candidates - Claims
+      summary: Get one of my claims
+      description: Returns one claim owned by the authenticated candidate.
+      operationId: getMyClaim
+      parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Candidates - Claims
+      summary: Update one of my claims
+      description: Updates the values of a candidate-owned claim.
+      operationId: updateMyClaim
+      parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimInput"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimSuccess"
+        "400":
+          $ref: "#/components/responses/ClaimUpdateError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Candidates - Claims
+      summary: Delete one of my claims
+      description: Deletes a claim owned by the authenticated candidate.
+      operationId: deleteMyClaim
+      parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      responses:
+        "204":
+          description: Claim deleted successfully
+        "400":
+          $ref: "#/components/responses/IfMatchValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/VersionConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/claims/{claimId}/review:
+    patch:
+      tags:
+      - Candidates - Claims
+      summary: Review an extracted claim
+      description: Accepts or rejects a pending extracted claim.
+      operationId: reviewMyClaim
+      parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimReview"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ClaimSuccess"
+        "400":
+          $ref: "#/components/responses/IfMatchValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/ClaimReviewConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/documents:
+    get:
+      tags:
+      - Documents
+      summary: List my documents
+      description: Lists uploaded documents with optional purpose and status filters.
+      operationId: listMyDocuments
+      parameters:
+      - name: purpose
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/DocumentPurpose"
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/DocumentStatus"
+      responses:
+        "200":
+          $ref: "#/components/responses/DocumentListSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Documents
+      summary: Upload candidate documents
+      description: Uploads one or more files. Repeat the `file` field for multiple files.
+      operationId: uploadMyDocuments
+      parameters:
+      - name: purpose
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/DocumentPurpose"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/me_documents_body"
+        required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/DocumentUploadSuccess"
+        "201":
+          $ref: "#/components/responses/DocumentUploadSuccess"
+        "207":
+          $ref: "#/components/responses/DocumentUploadSuccess"
+        "400":
+          $ref: "#/components/responses/DocumentUploadError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "413":
+          $ref: "#/components/responses/DocumentPayloadTooLarge"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/documents/{documentId}:
+    get:
+      tags:
+      - Documents
+      summary: Get document metadata
+      description: Returns metadata for one candidate-owned document.
+      operationId: getMyDocument
+      parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          $ref: "#/components/responses/DocumentSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Documents
+      summary: Delete a document
+      description: Deletes one candidate-owned document and its stored content.
+      operationId: deleteMyDocument
+      parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Document deleted successfully
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/documents/{documentId}/content:
+    get:
+      tags:
+      - Documents
+      summary: Download document content
+      description: Downloads the original bytes of a candidate-owned document.
+      operationId: downloadMyDocument
+      parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Original document bytes
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/users:
+    get:
+      tags:
+      - Users
+      summary: List users
+      description: Lists users for an active administrator.
+      operationId: listUsers
+      responses:
+        "200":
+          $ref: "#/components/responses/UserListSuccess"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - bearerAuth: []
+  /api/users/{id}:
+    get:
+      tags:
+      - Users
+      summary: Get a user
+      description: Returns the authenticated user or any user for an administrator.
+      operationId: getUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          $ref: "#/components/responses/UserSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/extraction-review-items:
+    get:
+      tags:
+      - Extraction
+      summary: List extraction review items
+      description: Lists review items with optional document and status filters.
+      operationId: listMyExtractionReviewItems
+      parameters:
+      - name: documentId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/ExtractionReviewStatus"
+      responses:
+        "200":
+          $ref: "#/components/responses/ExtractionReviewListSuccess"
+        "400":
+          $ref: "#/components/responses/IfMatchValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/extraction-review-items/{reviewItemId}/dismiss:
+    patch:
+      tags:
+      - Extraction
+      summary: Dismiss an extraction review item
+      description: Dismisses a pending extraction review item without creating a claim.
+      operationId: dismissMyExtractionReviewItem
+      parameters:
+      - name: reviewItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      responses:
+        "200":
+          $ref: "#/components/responses/ExtractionReviewSuccess"
+        "400":
+          $ref: "#/components/responses/IfMatchValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/ExtractionReviewConflict"
+      security:
+      - bearerAuth: []
+  /api/candidates/me/extraction-review-items/{reviewItemId}/resolve:
+    post:
+      tags:
+      - Extraction
+      summary: Resolve an extraction review item
+      description: Resolves an item with corrected values and creates an accepted claim.
+      operationId: resolveMyExtractionReviewItem
+      parameters:
+      - name: reviewItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        description: Optional record version used to prevent concurrent overwrites.
+        required: false
+        schema:
+          type: string
+        example: '"3"'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveExtractionReviewItem"
+            example:
+              values:
+                employer: Lumina
+                jobTitle: Software Engineer
+                startDate: 2023-01
+                endDate: 2025-06
+                description: Built and maintained backend services.
+                location: Ramallah
+        required: true
+      responses:
+        "201":
+          $ref: "#/components/responses/ExtractionResolutionSuccess"
+        "400":
+          $ref: "#/components/responses/ExtractionResolutionError"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/CandidateAccessRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/ExtractionReviewConflict"
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    ErrorResponse:
+      required:
+      - error
+      - success
+      - timestamp
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+          - false
+        error:
+          $ref: "#/components/schemas/ErrorResponse_error"
+        timestamp:
+          type: string
+          format: date-time
+      additionalProperties: false
+    ValidationErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ValidationErrorCode"
+    InvalidCredentialsErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/InvalidCredentialsErrorCode"
+    AuthenticationErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/AuthenticationErrorCode"
+    AccountUnavailableErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/AccountUnavailableErrorCode"
+    CandidateAccessErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/CandidateAccessErrorCode"
+    AuthorizationErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/CandidateAccessErrorCode"
+    NotFoundErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/NotFoundErrorCode"
+    RegistrationConflictErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/RegistrationConflictErrorCode"
+    CandidateProfileConflictErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/CandidateProfileConflictErrorCode"
+    IfMatchValidationErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/IfMatchValidationErrorCode"
+    ClaimInputErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ClaimInputErrorCode"
+    ClaimBatchInputErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ClaimBatchInputErrorCode"
+    ClaimUpdateErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ClaimUpdateErrorCode"
+    VersionConflictErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/VersionConflictErrorCode"
+    ClaimReviewConflictErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ClaimReviewConflictErrorCode"
+    DocumentUploadErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/DocumentUploadErrorCode"
+    DocumentPayloadTooLargeErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/DocumentPayloadTooLargeErrorCode"
+    ExtractionReviewConflictErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ExtractionReviewConflictErrorCode"
+    ExtractionResolutionErrorResponse:
+      allOf:
+      - $ref: "#/components/schemas/ErrorResponse"
+      - $ref: "#/components/schemas/ExtractionResolutionErrorCode"
+    ValidationErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ValidationErrorCode_error"
+    InvalidCredentialsErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/InvalidCredentialsErrorCode_error"
+    AuthenticationErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/AuthenticationErrorCode_error"
+    AccountUnavailableErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/AccountUnavailableErrorCode_error"
+    CandidateAccessErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/CandidateAccessErrorCode_error"
+    NotFoundErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/NotFoundErrorCode_error"
+    RegistrationConflictErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/RegistrationConflictErrorCode_error"
+    CandidateProfileConflictErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/CandidateProfileConflictErrorCode_error"
+    IfMatchValidationErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/IfMatchValidationErrorCode_error"
+    ClaimInputErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ClaimInputErrorCode_error"
+    ClaimBatchInputErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ClaimBatchInputErrorCode_error"
+    ClaimUpdateErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ClaimUpdateErrorCode_error"
+    VersionConflictErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/VersionConflictErrorCode_error"
+    ClaimReviewConflictErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ClaimReviewConflictErrorCode_error"
+    DocumentUploadErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/DocumentUploadErrorCode_error"
+    DocumentPayloadTooLargeErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/DocumentPayloadTooLargeErrorCode_error"
+    ExtractionReviewConflictErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ExtractionReviewConflictErrorCode_error"
+    ExtractionResolutionErrorCode:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ExtractionResolutionErrorCode_error"
+    SuccessEnvelope:
+      required:
+      - success
+      - timestamp
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    AuthResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        - message
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/AuthResponse_data"
+    CandidateProfile:
+      required:
+      - candidateId
+      - contactEmail
+      - createdAt
+      - email
+      - fullName
+      - headline
+      - location
+      - phone
+      - profileLinks
+      - summary
+      - updatedAt
+      - version
+      type: object
+      properties:
+        candidateId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        headline:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        contactEmail:
+          type: string
+          format: email
+          nullable: true
+        profileLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileLink"
+        version:
+          minimum: 1
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: false
+    CandidateProfileResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/CandidateProfile"
+    ClaimRecord:
+      discriminator:
+        propertyName: claimType
+        mapping:
+          skill: "#/components/schemas/SkillClaimRecord"
+          employment: "#/components/schemas/EmploymentClaimRecord"
+          education: "#/components/schemas/EducationClaimRecord"
+          certification: "#/components/schemas/CertificationClaimRecord"
+          language: "#/components/schemas/LanguageClaimRecord"
+          project: "#/components/schemas/ProjectClaimRecord"
+      oneOf:
+      - $ref: "#/components/schemas/SkillClaimRecord"
+      - $ref: "#/components/schemas/EmploymentClaimRecord"
+      - $ref: "#/components/schemas/EducationClaimRecord"
+      - $ref: "#/components/schemas/CertificationClaimRecord"
+      - $ref: "#/components/schemas/LanguageClaimRecord"
+      - $ref: "#/components/schemas/ProjectClaimRecord"
+    ClaimRecordBase:
+      required:
+      - claimId
+      - createdAt
+      - extraction
+      - origin
+      - status
+      - updatedAt
+      - version
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        origin:
+          type: string
+          enum:
+          - manual
+          - extracted
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - rejected
+        values:
+          description: Type-specific normalized claim fields.
+        extraction:
+          $ref: "#/components/schemas/ClaimExtraction"
+        version:
+          minimum: 1
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ClaimExtraction:
+      required:
+      - current
+      - fieldSources
+      - invocationId
+      - rawValues
+      - sourceDocumentId
+      type: object
+      properties:
+        invocationId:
+          type: string
+          format: uuid
+        sourceDocumentId:
+          type: string
+          format: uuid
+          nullable: true
+        rawValues:
+          type: object
+          additionalProperties:
+            type: string
+        fieldSources:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        current:
+          type: boolean
+      additionalProperties: false
+      nullable: true
+    ClaimDate:
+      pattern: "^\\d{4}(-(0[1-9]|1[0-2]))?$"
+      type: string
+      example: 2024-06
+    SkillClaimValues:
+      title: Skill
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          pattern: \S
+          type: string
+      additionalProperties: false
+    EmploymentClaimValues:
+      title: Employment
+      required:
+      - employer
+      - jobTitle
+      - startDate
+      type: object
+      properties:
+        employer:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        jobTitle:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+        description:
+          maxLength: 5000
+          minLength: 1
+          pattern: \S
+          type: string
+        location:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        skills:
+          maxItems: 50
+          type: array
+          items:
+            maxLength: 100
+            minLength: 1
+            pattern: \S
+            type: string
+      additionalProperties: false
+    EducationClaimValues:
+      title: Education
+      required:
+      - degree
+      - institution
+      - startDate
+      type: object
+      properties:
+        institution:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        degree:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        fieldOfStudy:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+      additionalProperties: false
+    CertificationClaimValues:
+      title: Certification
+      required:
+      - issueDate
+      - issuer
+      - title
+      type: object
+      properties:
+        title:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        issuer:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        issueDate:
+          $ref: "#/components/schemas/ClaimDate"
+        expiryDate:
+          $ref: "#/components/schemas/ClaimDate"
+        credentialId:
+          maxLength: 100
+          minLength: 1
+          pattern: \S
+          type: string
+      additionalProperties: false
+    LanguageClaimValues:
+      title: Language
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          pattern: \S
+          type: string
+        proficiency:
+          maxLength: 100
+          minLength: 1
+          pattern: \S
+          type: string
+      additionalProperties: false
+    ProjectClaimValues:
+      title: Project
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 1
+          pattern: \S
+          type: string
+        role:
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+          type: string
+        url:
+          maxLength: 2048
+          type: string
+          format: uri
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+        skills:
+          maxItems: 50
+          type: array
+          items:
+            maxLength: 100
+            minLength: 1
+            pattern: \S
+            type: string
+      additionalProperties: false
+    SkillClaimRecord:
+      title: Skill claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - skill
+          values:
+            $ref: "#/components/schemas/SkillClaimValues"
+    EmploymentClaimRecord:
+      title: Employment claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - employment
+          values:
+            $ref: "#/components/schemas/EmploymentClaimValues"
+    EducationClaimRecord:
+      title: Education claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - education
+          values:
+            $ref: "#/components/schemas/EducationClaimValues"
+    CertificationClaimRecord:
+      title: Certification claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - certification
+          values:
+            $ref: "#/components/schemas/CertificationClaimValues"
+    LanguageClaimRecord:
+      title: Language claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - language
+          values:
+            $ref: "#/components/schemas/LanguageClaimValues"
+    ProjectClaimRecord:
+      title: Project claim
+      allOf:
+      - $ref: "#/components/schemas/ClaimRecordBase"
+      - required:
+        - claimType
+        - values
+        type: object
+        properties:
+          claimType:
+            type: string
+            enum:
+            - project
+          values:
+            $ref: "#/components/schemas/ProjectClaimValues"
+    ClaimResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/ClaimRecord"
+    ClaimListResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/ClaimRecord"
+    ClaimPairRequest:
+      required:
+      - leftClaimId
+      - rightClaimId
+      type: object
+      properties:
+        leftClaimId:
+          type: string
+          format: uuid
+        rightClaimId:
+          type: string
+          format: uuid
+      additionalProperties: false
+    RecordClaimsDifferentRequest:
+      required:
+      - leftClaimId
+      - leftVersion
+      - rightClaimId
+      - rightVersion
+      type: object
+      properties:
+        leftClaimId:
+          type: string
+          format: uuid
+        rightClaimId:
+          type: string
+          format: uuid
+        leftVersion:
+          minimum: 1
+          type: integer
+        rightVersion:
+          minimum: 1
+          type: integer
+      additionalProperties: false
+    ClaimBatchAcceptAction:
+      required:
+      - action
+      - claimId
+      - version
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+          - accept_claim
+        claimId:
+          type: string
+          format: uuid
+        version:
+          minimum: 1
+          type: integer
+      additionalProperties: false
+    ClaimBatchMergeAction:
+      required:
+      - action
+      - leftClaimId
+      - leftVersion
+      - rightClaimId
+      - rightVersion
+      - survivorClaimId
+      - values
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+          - merge_claims
+        leftClaimId:
+          type: string
+          format: uuid
+        rightClaimId:
+          type: string
+          format: uuid
+        leftVersion:
+          minimum: 1
+          type: integer
+        rightVersion:
+          minimum: 1
+          type: integer
+        survivorClaimId:
+          type: string
+          format: uuid
+        values:
+          description: Final values validated against the stored claim type.
+          anyOf:
+          - $ref: "#/components/schemas/SkillClaimValues"
+          - $ref: "#/components/schemas/EmploymentClaimValues"
+          - $ref: "#/components/schemas/EducationClaimValues"
+          - $ref: "#/components/schemas/CertificationClaimValues"
+          - $ref: "#/components/schemas/LanguageClaimValues"
+          - $ref: "#/components/schemas/ProjectClaimValues"
+        current:
+          type: boolean
+      additionalProperties: false
+    ClaimBatchResolutionRequest:
+      required:
+      - actions
+      type: object
+      properties:
+        actions:
+          maxItems: 100
+          minItems: 1
+          type: array
+          items:
+            oneOf:
+            - $ref: "#/components/schemas/ClaimBatchAcceptAction"
+            - $ref: "#/components/schemas/ClaimBatchMergeAction"
+      additionalProperties: false
+    ConfirmedClaimMergeRequest:
+      required:
+      - leftClaimId
+      - leftVersion
+      - rightClaimId
+      - rightVersion
+      - survivorClaimId
+      - values
+      type: object
+      properties:
+        leftClaimId:
+          type: string
+          format: uuid
+        rightClaimId:
+          type: string
+          format: uuid
+        leftVersion:
+          minimum: 1
+          type: integer
+        rightVersion:
+          minimum: 1
+          type: integer
+        survivorClaimId:
+          type: string
+          format: uuid
+        values:
+          description: Final values validated against the stored claim type.
+          anyOf:
+          - $ref: "#/components/schemas/SkillClaimValues"
+          - $ref: "#/components/schemas/EmploymentClaimValues"
+          - $ref: "#/components/schemas/EducationClaimValues"
+          - $ref: "#/components/schemas/CertificationClaimValues"
+          - $ref: "#/components/schemas/LanguageClaimValues"
+          - $ref: "#/components/schemas/ProjectClaimValues"
+        current:
+          type: boolean
+          description: "Whether an employment, education, or project claim is ongoing."
+      additionalProperties: false
+    ClaimVersionReference:
+      required:
+      - claimId
+      - version
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        version:
+          minimum: 1
+          type: integer
+      additionalProperties: false
+    ClaimMergeNoProposal:
+      required:
+      - reason
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - no_proposal
+        reason:
+          type: string
+          enum:
+          - different_candidate
+          - different_type
+          - different_identity
+          - unsupported_type
+          - same_claim
+          - rejected_claim
+          - superseded_claim
+      additionalProperties: false
+    ClaimMergeDateValue:
+      description: "A normalized date used while comparing claims. It can be explicit, ongoing, or missing."
+      oneOf:
+      - required:
+        - kind
+        - value
+        type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - date
+          value:
+            pattern: "^\\d{4}(-\\d{2})?$"
+            type: string
+            example: 2024-06
+        additionalProperties: false
+      - required:
+        - kind
+        type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - present
+          asOf:
+            pattern: "^\\d{4}(-\\d{2})?$"
+            type: string
+            description: Reliable source date used to compare Present with an explicit date.
+        additionalProperties: false
+      - required:
+        - kind
+        type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - missing
+        additionalProperties: false
+    ClaimMergeComparableValue:
+      description: "A scalar, list, or normalized date that can appear in a claim merge comparison."
+      oneOf:
+      - type: string
+      - type: array
+        items:
+          type: string
+      - $ref: "#/components/schemas/ClaimMergeDateValue"
+    ClaimMergeFieldSame:
+      required:
+      - kind
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - same
+        value:
+          $ref: "#/components/schemas/ClaimMergeComparableValue"
+      additionalProperties: false
+      description: Both claims provide the same value; no candidate decision is needed.
+    ClaimMergeFieldEnrichment:
+      required:
+      - from
+      - kind
+      - value
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - enrichment
+        value:
+          $ref: "#/components/schemas/ClaimMergeComparableValue"
+        from:
+          type: string
+          enum:
+          - left
+          - right
+          - both
+      additionalProperties: false
+      description: "One claim adds a missing value, or both lists can be combined safely."
+    ClaimMergeFieldDatePrecisionImprovement:
+      required:
+      - from
+      - kind
+      - value
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - precision_improvement
+        value:
+          $ref: "#/components/schemas/ClaimMergeDateValue"
+        from:
+          type: string
+          enum:
+          - left
+          - right
+      additionalProperties: false
+      description: "Both dates agree, and one provides greater precision; no candidate decision is needed."
+    ClaimMergeFieldDateCompatible:
+      required:
+      - kind
+      - left
+      - right
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - compatible
+        left:
+          $ref: "#/components/schemas/ClaimMergeDateValue"
+        right:
+          $ref: "#/components/schemas/ClaimMergeDateValue"
+      additionalProperties: false
+      description: "The dates may both be valid, but the candidate must choose the final value."
+    ClaimMergeFieldDateWarning:
+      required:
+      - kind
+      - left
+      - right
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - warning
+        left:
+          $ref: "#/components/schemas/ClaimMergeDateValue"
+        right:
+          $ref: "#/components/schemas/ClaimMergeDateValue"
+      additionalProperties: false
+      description: "The dates cannot be compared confidently, so the candidate must review them."
+    ClaimMergeFieldConflict:
+      required:
+      - kind
+      - left
+      - right
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - conflict
+        left:
+          $ref: "#/components/schemas/ClaimMergeComparableValue"
+        right:
+          $ref: "#/components/schemas/ClaimMergeComparableValue"
+      additionalProperties: false
+      description: The claims disagree and the candidate must choose the final value.
+    ClaimMergeFieldComparison:
+      description: "Comparison outcome for one claim field, selected by the kind discriminator."
+      discriminator:
+        propertyName: kind
+        mapping:
+          same: "#/components/schemas/ClaimMergeFieldSame"
+          enrichment: "#/components/schemas/ClaimMergeFieldEnrichment"
+          precision_improvement: "#/components/schemas/ClaimMergeFieldDatePrecisionImprovement"
+          compatible: "#/components/schemas/ClaimMergeFieldDateCompatible"
+          warning: "#/components/schemas/ClaimMergeFieldDateWarning"
+          conflict: "#/components/schemas/ClaimMergeFieldConflict"
+      oneOf:
+      - $ref: "#/components/schemas/ClaimMergeFieldSame"
+      - $ref: "#/components/schemas/ClaimMergeFieldEnrichment"
+      - $ref: "#/components/schemas/ClaimMergeFieldDatePrecisionImprovement"
+      - $ref: "#/components/schemas/ClaimMergeFieldDateCompatible"
+      - $ref: "#/components/schemas/ClaimMergeFieldDateWarning"
+      - $ref: "#/components/schemas/ClaimMergeFieldConflict"
+    ClaimMergeProposal:
+      required:
+      - fields
+      - identity
+      - left
+      - proposedValues
+      - recommendedAction
+      - requiresCandidateChoice
+      - result
+      - right
+      - survivorClaimId
+      - survivorReason
+      - unresolvedFields
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - proposal
+        identity:
+          type: string
+          enum:
+          - equivalent
+          - suspected_duplicate
+        left:
+          $ref: "#/components/schemas/ClaimVersionReference"
+        right:
+          $ref: "#/components/schemas/ClaimVersionReference"
+        survivorClaimId:
+          type: string
+          format: uuid
+          nullable: true
+        survivorReason:
+          type: string
+          nullable: true
+          enum:
+          - candidate_authority
+          - accepted_status
+          - oldest_pending
+          - claim_id_tiebreaker
+        fields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ClaimMergeFieldComparison"
+          description: "Claim field names mapped to their comparison outcome. Compatible, warning, and conflict outcomes require candidate review."
+        proposedValues:
+          type: object
+          additionalProperties: true
+        proposedCurrent:
+          type: boolean
+          nullable: true
+        unresolvedFields:
+          type: array
+          description: "Field names classified as compatible, warning, or conflict."
+          items:
+            type: string
+        requiresCandidateChoice:
+          type: boolean
+        recommendedAction:
+          type: string
+          enum:
+          - automatic_coalesce
+          - candidate_review
+      additionalProperties: false
+    ClaimMergeProposalResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            oneOf:
+            - $ref: "#/components/schemas/ClaimMergeNoProposal"
+            - $ref: "#/components/schemas/ClaimMergeProposal"
+    ClaimMergeCandidateListResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/ClaimMergeProposal"
+    ClaimNoMergeResult:
+      required:
+      - reason
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - no_merge
+        reason:
+          type: string
+          enum:
+          - different_candidate
+          - different_type
+          - different_identity
+          - unsupported_type
+          - same_claim
+          - rejected_claim
+          - superseded_claim
+      additionalProperties: false
+    ClaimCoalescedResult:
+      required:
+      - duplicate
+      - result
+      - survivor
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - coalesced
+        survivor:
+          $ref: "#/components/schemas/ClaimRecord"
+        duplicate:
+          $ref: "#/components/schemas/ClaimRecord"
+      additionalProperties: false
+    ClaimCoalesceResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            oneOf:
+            - $ref: "#/components/schemas/ClaimNoMergeResult"
+            - required:
+              - result
+              type: object
+              properties:
+                result:
+                  type: string
+                  enum:
+                  - candidate_review_required
+              additionalProperties: false
+            - $ref: "#/components/schemas/ClaimCoalescedResult"
+    RecordClaimsDifferentResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            oneOf:
+            - required:
+              - result
+              type: object
+              properties:
+                result:
+                  type: string
+                  enum:
+                  - recorded
+              additionalProperties: false
+            - required:
+              - reason
+              - result
+              type: object
+              properties:
+                result:
+                  type: string
+                  enum:
+                  - no_decision
+                reason:
+                  type: string
+                  enum:
+                  - different_candidate
+                  - different_type
+                  - different_identity
+                  - unsupported_type
+                  - same_claim
+                  - rejected_claim
+                  - superseded_claim
+              additionalProperties: false
+            - required:
+              - result
+              type: object
+              properties:
+                result:
+                  type: string
+                  enum:
+                  - not_eligible
+              additionalProperties: false
+    ClaimBatchAcceptedClaimResult:
+      required:
+      - action
+      - claim
+      - index
+      - status
+      type: object
+      properties:
+        index:
+          minimum: 0
+          type: integer
+        action:
+          type: string
+          enum:
+          - accept_claim
+        status:
+          type: string
+          enum:
+          - accepted
+        claim:
+          $ref: "#/components/schemas/ClaimRecord"
+      additionalProperties: false
+    ClaimBatchAcceptedMergeResult:
+      required:
+      - action
+      - duplicate
+      - index
+      - status
+      - survivor
+      type: object
+      properties:
+        index:
+          minimum: 0
+          type: integer
+        action:
+          type: string
+          enum:
+          - merge_claims
+        status:
+          type: string
+          enum:
+          - accepted
+        survivor:
+          $ref: "#/components/schemas/ClaimRecord"
+        duplicate:
+          $ref: "#/components/schemas/ClaimRecord"
+      additionalProperties: false
+    ClaimBatchConflictResult:
+      required:
+      - action
+      - current
+      - index
+      - status
+      type: object
+      properties:
+        index:
+          minimum: 0
+          type: integer
+        action:
+          type: string
+          enum:
+          - accept_claim
+          - merge_claims
+        status:
+          type: string
+          enum:
+          - conflict
+        current:
+          description: Current claim or claims to refresh before retrying.
+      additionalProperties: false
+    ClaimBatchNotEligibleResult:
+      required:
+      - action
+      - index
+      - reason
+      - status
+      type: object
+      properties:
+        index:
+          minimum: 0
+          type: integer
+        action:
+          type: string
+          enum:
+          - accept_claim
+          - merge_claims
+        status:
+          type: string
+          enum:
+          - not_eligible
+        reason:
+          type: string
+      additionalProperties: false
+    ClaimBatchFailedResult:
+      required:
+      - action
+      - code
+      - index
+      - message
+      - status
+      type: object
+      properties:
+        index:
+          minimum: 0
+          type: integer
+        action:
+          type: string
+          enum:
+          - accept_claim
+          - merge_claims
+        status:
+          type: string
+          enum:
+          - failed
+        code:
+          type: string
+        message:
+          type: string
+      additionalProperties: false
+    ClaimBatchResolutionResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              oneOf:
+              - $ref: "#/components/schemas/ClaimBatchAcceptedClaimResult"
+              - $ref: "#/components/schemas/ClaimBatchAcceptedMergeResult"
+              - $ref: "#/components/schemas/ClaimBatchConflictResult"
+              - $ref: "#/components/schemas/ClaimBatchNotEligibleResult"
+              - $ref: "#/components/schemas/ClaimBatchFailedResult"
+    InvalidClaimMergeResolution:
+      required:
+      - reason
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - invalid_resolution
+        reason:
+          type: string
+          enum:
+          - invalid_survivor
+          - missing_field_choice
+          - inconsistent_current
+        fields:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    ConfirmedClaimMergedResult:
+      required:
+      - duplicate
+      - result
+      - survivor
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - merged
+        survivor:
+          $ref: "#/components/schemas/ClaimRecord"
+        duplicate:
+          $ref: "#/components/schemas/ClaimRecord"
+      additionalProperties: false
+    ConfirmedClaimMergeResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            oneOf:
+            - $ref: "#/components/schemas/ClaimNoMergeResult"
+            - $ref: "#/components/schemas/InvalidClaimMergeResolution"
+            - required:
+              - result
+              type: object
+              properties:
+                result:
+                  type: string
+                  enum:
+                  - not_eligible
+              additionalProperties: false
+            - $ref: "#/components/schemas/ConfirmedClaimMergedResult"
+    ExportedProfilePersonalInfo:
+      required:
+      - contactEmail
+      - email
+      - fullName
+      - headline
+      - location
+      - phone
+      - profileLinks
+      - summary
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        contactEmail:
+          type: string
+          format: email
+          nullable: true
+        headline:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        profileLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileLink"
+      additionalProperties: false
+    ClaimSourceReference:
+      required:
+      - anchor
+      - documentId
+      - fields
+      - references
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        references:
+          type: array
+          items:
+            type: string
+        fields:
+          type: array
+          items:
+            type: string
+        anchor:
+          $ref: "#/components/schemas/ClaimSourceAnchor"
+      additionalProperties: false
+    ClaimSourceAnchor:
+      discriminator:
+        propertyName: kind
+        mapping:
+          pdf_line: "#/components/schemas/PdfLineAnchor"
+          docx_paragraph: "#/components/schemas/DocxParagraphAnchor"
+          docx_table_row: "#/components/schemas/DocxTableRowAnchor"
+      oneOf:
+      - $ref: "#/components/schemas/PdfLineAnchor"
+      - $ref: "#/components/schemas/DocxParagraphAnchor"
+      - $ref: "#/components/schemas/DocxTableRowAnchor"
+    PdfLineAnchor:
+      title: PDF line anchor
+      required:
+      - box
+      - kind
+      - links
+      - order
+      - pageNumber
+      - text
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - pdf_line
+        order:
+          minimum: 0
+          type: integer
+        pageNumber:
+          minimum: 1
+          type: integer
+        box:
+          $ref: "#/components/schemas/PdfLineAnchor_box"
+        text:
+          type: string
+        links:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    DocxParagraphAnchor:
+      title: DOCX paragraph anchor
+      required:
+      - blockIndex
+      - kind
+      - links
+      - text
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - docx_paragraph
+        blockIndex:
+          minimum: 0
+          type: integer
+        text:
+          type: string
+        links:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    DocxTableRowAnchor:
+      title: DOCX table row anchor
+      required:
+      - blockIndex
+      - cells
+      - kind
+      - rowNumber
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - docx_table_row
+        blockIndex:
+          minimum: 0
+          type: integer
+        rowNumber:
+          minimum: 1
+          type: integer
+        cells:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    ExportedSkillClaim:
+      required:
+      - claimId
+      - name
+      - sources
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedEmploymentClaim:
+      required:
+      - claimId
+      - employer
+      - jobTitle
+      - sources
+      - startDate
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        employer:
+          type: string
+        jobTitle:
+          type: string
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+        description:
+          type: string
+        location:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedEducationClaim:
+      required:
+      - claimId
+      - degree
+      - institution
+      - sources
+      - startDate
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        institution:
+          type: string
+        degree:
+          type: string
+        fieldOfStudy:
+          type: string
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedCertificationClaim:
+      required:
+      - claimId
+      - issueDate
+      - issuer
+      - sources
+      - title
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        issuer:
+          type: string
+        issueDate:
+          $ref: "#/components/schemas/ClaimDate"
+        expiryDate:
+          $ref: "#/components/schemas/ClaimDate"
+        credentialId:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedLanguageClaim:
+      required:
+      - claimId
+      - name
+      - sources
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        proficiency:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedProjectClaim:
+      required:
+      - claimId
+      - name
+      - sources
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        role:
+          type: string
+        url:
+          type: string
+          format: uri
+        startDate:
+          $ref: "#/components/schemas/ClaimDate"
+        endDate:
+          $ref: "#/components/schemas/ClaimDate"
+        skills:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimSourceReference"
+      additionalProperties: false
+    ExportedProfile:
+      required:
+      - certifications
+      - education
+      - employment
+      - languages
+      - personalInfo
+      - projects
+      - skills
+      type: object
+      properties:
+        personalInfo:
+          $ref: "#/components/schemas/ExportedProfilePersonalInfo"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedSkillClaim"
+        employment:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedEmploymentClaim"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedEducationClaim"
+        certifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedCertificationClaim"
+        languages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedLanguageClaim"
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportedProjectClaim"
+      additionalProperties: false
+    ExportedProfileResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/ExportedProfile"
+    DocumentRecord:
+      required:
+      - byteSize
+      - createdAt
+      - documentId
+      - failureCode
+      - mediaType
+      - originalFilename
+      - ownerUserId
+      - purpose
+      - sha256
+      - status
+      - storageKey
+      - updatedAt
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        ownerUserId:
+          type: string
+          format: uuid
+        purpose:
+          $ref: "#/components/schemas/DocumentPurpose"
+        originalFilename:
+          type: string
+        mediaType:
+          type: string
+          enum:
+          - application/pdf
+          - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+          - image/jpeg
+          - image/png
+        byteSize:
+          minimum: 1
+          type: integer
+        sha256:
+          pattern: "^[0-9a-f]{64}$"
+          type: string
+        storageKey:
+          type: string
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        failureCode:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: false
+    DocumentResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/DocumentRecord"
+    DocumentListResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/DocumentRecord"
+    DocumentUploadResult:
+      oneOf:
+      - title: Upload succeeded
+        required:
+        - deduplicated
+        - document
+        - filename
+        - success
+        type: object
+        properties:
+          success:
+            type: boolean
+            enum:
+            - true
+          filename:
+            type: string
+          document:
+            $ref: "#/components/schemas/DocumentRecord"
+          deduplicated:
+            type: boolean
+        additionalProperties: false
+      - title: Upload failed
+        required:
+        - error
+        - filename
+        - success
+        type: object
+        properties:
+          success:
+            type: boolean
+            enum:
+            - false
+          filename:
+            type: string
+          error:
+            $ref: "#/components/schemas/DocumentUploadResult_error"
+        additionalProperties: false
+    DocumentUploadResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/DocumentUploadResult"
+          limit:
+            $ref: "#/components/schemas/DocumentUploadResponse_limit"
+    User:
+      required:
+      - accountStatus
+      - createdAt
+      - email
+      - emailVerifiedAt
+      - name
+      - role
+      - updatedAt
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - candidate
+          - reviewer
+          - admin
+        accountStatus:
+          type: string
+          enum:
+          - active
+          - suspended
+          - disabled
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: false
+    UserResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/User"
+    UserListResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+    ExtractionReviewItem:
+      required:
+      - claimType
+      - documentId
+      - fields
+      - issues
+      - resolvedClaimId
+      - reviewItemId
+      - sources
+      - status
+      - version
+      type: object
+      properties:
+        reviewItemId:
+          type: string
+          format: uuid
+        documentId:
+          type: string
+          format: uuid
+        claimType:
+          $ref: "#/components/schemas/ClaimType"
+        fields:
+          type: object
+          additionalProperties: true
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractionReviewItem_issues"
+        sources:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/ExtractionReviewStatus"
+        resolvedClaimId:
+          type: string
+          format: uuid
+          nullable: true
+        version:
+          minimum: 1
+          type: integer
+      additionalProperties: false
+    ExtractionReviewResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/ExtractionReviewItem"
+    ExtractionReviewListResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/ExtractionReviewItem"
+    ExtractionResolutionResponse:
+      allOf:
+      - $ref: "#/components/schemas/SuccessEnvelope"
+      - required:
+        - data
+        type: object
+        properties:
+          data:
+            $ref: "#/components/schemas/ExtractionResolutionResponse_data"
+    DocumentPurpose:
+      type: string
+      enum:
+      - source
+      - evidence
+    DocumentStatus:
+      type: string
+      enum:
+      - stored
+      - processing
+      - ready
+      - failed
+      - deleting
+    ExtractionReviewStatus:
+      type: string
+      enum:
+      - pending
+      - resolved
+      - dismissed
+    ExtractionReviewIssueCode:
+      type: string
+      description: Machine-readable reason that an extracted claim requires review.
+      enum:
+      - invalid_item
+      - invalid_source
+      - missing_value
+      - invalid_value
+      - invalid_date
+      - invalid_date_order
+      - missing_name
+      - missing_employer
+      - missing_job_title
+      - missing_start_date
+      - missing_institution
+      - missing_degree
+      - missing_title
+      - missing_issuer
+      - missing_issue_date
+    ResolveExtractionReviewItem:
+      required:
+      - values
+      type: object
+      properties:
+        values:
+          description: Must match the claim type stored on the review item.
+          oneOf:
+          - $ref: "#/components/schemas/SkillClaimValues"
+          - $ref: "#/components/schemas/EmploymentClaimValues"
+          - $ref: "#/components/schemas/EducationClaimValues"
+          - $ref: "#/components/schemas/CertificationClaimValues"
+          - $ref: "#/components/schemas/LanguageClaimValues"
+          - $ref: "#/components/schemas/ProjectClaimValues"
+      additionalProperties: false
+    ProfileLink:
+      required:
+      - label
+      - url
+      type: object
+      properties:
+        label:
+          maxLength: 50
+          minLength: 1
+          type: string
+        url:
+          maxLength: 2048
+          type: string
+          format: uri
+      additionalProperties: false
+    CreateCandidateProfile:
+      required:
+      - fullName
+      type: object
+      properties:
+        fullName:
+          maxLength: 200
+          minLength: 1
+          type: string
+        headline:
+          maxLength: 200
+          minLength: 1
+          type: string
+        summary:
+          maxLength: 5000
+          minLength: 1
+          type: string
+        phone:
+          maxLength: 30
+          minLength: 1
+          type: string
+        location:
+          maxLength: 200
+          minLength: 1
+          type: string
+        contactEmail:
+          maxLength: 320
+          type: string
+          format: email
+        profileLinks:
+          maxItems: 20
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileLink"
+      additionalProperties: false
+    UpdateCandidateProfile:
+      minProperties: 1
+      type: object
+      properties:
+        fullName:
+          maxLength: 200
+          minLength: 1
+          type: string
+        headline:
+          maxLength: 200
+          type: string
+          nullable: true
+        summary:
+          maxLength: 5000
+          type: string
+          nullable: true
+        phone:
+          maxLength: 30
+          type: string
+          nullable: true
+        location:
+          maxLength: 200
+          type: string
+          nullable: true
+        contactEmail:
+          maxLength: 320
+          type: string
+          format: email
+          nullable: true
+        profileLinks:
+          maxItems: 20
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileLink"
+      additionalProperties: false
+    ClaimType:
+      type: string
+      enum:
+      - skill
+      - employment
+      - education
+      - certification
+      - language
+      - project
+    ClaimInput:
+      required:
+      - type
+      - values
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ClaimType"
+        values:
+          description: "Must match the selected claim type. On update, the type must also match the existing claim."
+          oneOf:
+          - $ref: "#/components/schemas/SkillClaimValues"
+          - $ref: "#/components/schemas/EmploymentClaimValues"
+          - $ref: "#/components/schemas/EducationClaimValues"
+          - $ref: "#/components/schemas/CertificationClaimValues"
+          - $ref: "#/components/schemas/LanguageClaimValues"
+          - $ref: "#/components/schemas/ProjectClaimValues"
+      additionalProperties: false
+    ClaimReview:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - accepted
+          - rejected
+      additionalProperties: false
+    auth_register_body:
+      required:
+      - email
+      - name
+      - password
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 1
+          type: string
+        email:
+          maxLength: 320
+          type: string
+          format: email
+        password:
+          maxLength: 128
+          minLength: 8
+          type: string
+      additionalProperties: false
+    auth_signin_body:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          maxLength: 320
+          type: string
+          format: email
+        password:
+          maxLength: 128
+          minLength: 1
+          type: string
+      additionalProperties: false
+    me_documents_body:
+      required:
+      - file
+      type: object
+      properties:
+        file:
+          minItems: 1
+          type: array
+          items:
+            type: string
+            format: binary
+    ErrorResponse_error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          nullable: true
+      additionalProperties: false
+    ValidationErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+    InvalidCredentialsErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - INVALID_CREDENTIALS
+    AuthenticationErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - AUTHENTICATION_REQUIRED
+    AccountUnavailableErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - ACCOUNT_UNAVAILABLE
+    CandidateAccessErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - ACCOUNT_UNAVAILABLE
+          - FORBIDDEN
+    NotFoundErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - RECORD_NOT_FOUND
+    RegistrationConflictErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - UNIQUE_CONSTRAINT_VIOLATION
+    CandidateProfileConflictErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - CANDIDATE_PROFILE_EXISTS
+    IfMatchValidationErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - INVALID_IF_MATCH
+    ClaimInputErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - INVALID_CLAIM_DATES
+          - INVALID_CLAIM_VALUES
+    ClaimBatchInputErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - OVERLAPPING_BATCH_CLAIMS
+    ClaimUpdateErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - INVALID_IF_MATCH
+          - INVALID_CLAIM_DATES
+          - INVALID_CLAIM_VALUES
+          - CLAIM_TYPE_MISMATCH
+    VersionConflictErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VERSION_CONFLICT
+    ClaimReviewConflictErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VERSION_CONFLICT
+          - CLAIM_NOT_REVIEWABLE
+    DocumentUploadErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - INVALID_DOCUMENT_UPLOAD
+    DocumentPayloadTooLargeErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - DOCUMENT_TOO_LARGE
+          - FST_REQ_FILE_TOO_LARGE
+    ExtractionReviewConflictErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VERSION_CONFLICT
+          - EXTRACTION_REVIEW_ITEM_NOT_PENDING
+    ExtractionResolutionErrorCode_error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - INVALID_IF_MATCH
+          - INVALID_CLAIM_DATES
+          - INVALID_CLAIM_VALUES
+    AuthResponse_data:
+      required:
+      - accessToken
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        accessToken:
+          type: string
+      additionalProperties: false
+    PdfLineAnchor_box:
+      required:
+      - height
+      - width
+      - x
+      - "y"
+      type: object
+      properties:
+        x:
+          type: number
+        "y":
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+      additionalProperties: false
+    DocumentUploadResult_error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - INVALID_DOCUMENT_FILENAME
+          - EMPTY_DOCUMENT
+          - UNSUPPORTED_DOCUMENT_TYPE
+          - DOCUMENT_PURPOSE_MISMATCH
+          - DOCUMENT_BEING_DELETED
+          - CORRUPTED_DOCUMENT
+          - DOCUMENT_TOO_LARGE
+          - DOCUMENT_UPLOAD_FAILED
+        message:
+          type: string
+      additionalProperties: false
+    DocumentUploadResponse_limit:
+      required:
+      - maximumFiles
+      - reached
+      type: object
+      properties:
+        reached:
+          type: boolean
+          enum:
+          - true
+        maximumFiles:
+          minimum: 1
+          type: integer
+      additionalProperties: false
+    ExtractionReviewItem_issues:
+      required:
+      - code
+      - field
+      - required
+      type: object
+      properties:
+        field:
+          type: string
+          nullable: true
+        code:
+          $ref: "#/components/schemas/ExtractionReviewIssueCode"
+        required:
+          type: boolean
+      additionalProperties: false
+    ExtractionResolutionResponse_data:
+      required:
+      - claim
+      - reviewItem
+      type: object
+      properties:
+        reviewItem:
+          $ref: "#/components/schemas/ExtractionReviewItem"
+        claim:
+          $ref: "#/components/schemas/ClaimRecord"
+      additionalProperties: false
+  responses:
+    AuthSuccess:
+      description: Authentication succeeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthResponse"
+    CandidateProfileSuccess:
+      description: Candidate profile response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CandidateProfileResponse"
+    ExportedProfileSuccess:
+      description: Structured candidate profile response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExportedProfileResponse"
+    ClaimSuccess:
+      description: Candidate claim response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimResponse"
+    ClaimListSuccess:
+      description: Candidate claim collection
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimListResponse"
+    ClaimMergeProposalSuccess:
+      description: Read-only claim merge proposal
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimMergeProposalResponse"
+    ClaimMergeCandidateListSuccess:
+      description: Read-only candidate duplicate proposals
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimMergeCandidateListResponse"
+    ClaimCoalesceSuccess:
+      description: Safe pending-claim coalescing result
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimCoalesceResponse"
+    RecordClaimsDifferentSuccess:
+      description: Candidate claim-pair decision result
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RecordClaimsDifferentResponse"
+    ClaimBatchResolutionSuccess:
+      description: Ordered per-item claim resolution outcomes
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimBatchResolutionResponse"
+    ConfirmedClaimMergeSuccess:
+      description: Candidate-confirmed claim merge result
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConfirmedClaimMergeResponse"
+    DocumentSuccess:
+      description: Document metadata response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentResponse"
+    DocumentListSuccess:
+      description: Document metadata collection
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentListResponse"
+    DocumentUploadSuccess:
+      description: Per-file document upload results
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentUploadResponse"
+    UserSuccess:
+      description: User response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UserResponse"
+    UserListSuccess:
+      description: User collection
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UserListResponse"
+    ExtractionReviewSuccess:
+      description: Extraction review item response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExtractionReviewResponse"
+    ExtractionReviewListSuccess:
+      description: Extraction review item collection
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExtractionReviewListResponse"
+    ExtractionResolutionSuccess:
+      description: Resolved review item and accepted claim
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExtractionResolutionResponse"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrorResponse"
+    InvalidCredentials:
+      description: Email or password is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InvalidCredentialsErrorResponse"
+    AuthenticationRequired:
+      description: Authentication required or token is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthenticationErrorResponse"
+    AccountUnavailable:
+      description: Account is not active
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AccountUnavailableErrorResponse"
+    CandidateAccessRequired:
+      description: Active candidate account required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CandidateAccessErrorResponse"
+    Forbidden:
+      description: Access is forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthorizationErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundErrorResponse"
+    RegistrationConflict:
+      description: An account with this email already exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RegistrationConflictErrorResponse"
+    CandidateProfileConflict:
+      description: Candidate profile already exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CandidateProfileConflictErrorResponse"
+    IfMatchValidationError:
+      description: Request data or If-Match header is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/IfMatchValidationErrorResponse"
+    ClaimInputError:
+      description: Claim data is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimInputErrorResponse"
+    ClaimBatchInputError:
+      description: Batch data is invalid or claim IDs overlap between actions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimBatchInputErrorResponse"
+    ClaimUpdateError:
+      description: "Claim data, type, or If-Match header is invalid"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimUpdateErrorResponse"
+    VersionConflict:
+      description: Resource version does not match the version reviewed by the client
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/VersionConflictErrorResponse"
+    ClaimReviewConflict:
+      description: Claim is not reviewable or its version changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimReviewConflictErrorResponse"
+    DocumentUploadError:
+      description: Upload query or multipart body is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentUploadErrorResponse"
+    DocumentPayloadTooLarge:
+      description: A document exceeds the configured size limit
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentPayloadTooLargeErrorResponse"
+    ExtractionReviewConflict:
+      description: Review item is not pending or its version changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExtractionReviewConflictErrorResponse"
+    ExtractionResolutionError:
+      description: "Resolution data, claim values, or If-Match header is invalid"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExtractionResolutionErrorResponse"
+  parameters:
+    ClaimId:
+      name: claimId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LeftClaimId:
+      name: leftClaimId
+      in: query
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RightClaimId:
+      name: rightClaimId
+      in: query
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IfMatch:
+      name: If-Match
+      in: header
+      description: Optional record version used to prevent concurrent overwrites.
+      required: false
+      schema:
+        type: string
+      example: '"3"'
+    DocumentId:
+      name: documentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ReviewItemId:
+      name: reviewItemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

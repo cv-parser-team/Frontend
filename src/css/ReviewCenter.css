@@ -1,0 +1,838 @@
+/* ========================================
+   REVIEW CENTER - LUMINA CV
+======================================== */
+
+:root {
+  --review-primary: #5146ed;
+  --review-primary-light: #eeedff;
+  --review-text: #142246;
+  --review-muted: #64748b;
+  --review-border: #dce2ed;
+  --review-background: #f5f6fb;
+  --review-white: #ffffff;
+}
+
+/* ========================================
+   PAGE LAYOUT
+======================================== */
+
+.review-center-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--review-background);
+  color: var(--review-text);
+}
+
+.review-center-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-center-content {
+  padding: 18px 20px 28px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.review-breadcrumb {
+  color: var(--review-muted);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.review-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.review-page-heading h1 {
+  font-size: 23px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.review-page-heading p {
+  font-size: 14px;
+  color: var(--review-muted);
+  margin: 0;
+}
+
+.review-user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--review-muted);
+  white-space: nowrap;
+}
+
+/* ========================================
+   BADGES
+======================================== */
+
+.review-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  padding: 3px 9px;
+  border-radius: 20px;
+
+  white-space: nowrap;
+}
+
+.review-badge.yellow {
+  background: #fff3bd;
+  color: #946200;
+}
+
+.review-badge.warning {
+  background: #fff3d6;
+  border: 1px dashed #fbbf24;
+  color: #b45309;
+}
+
+.review-badge.neutral {
+  background: #ffffff;
+  color: #42516f;
+  border: 1px solid #64748b;
+}
+
+.review-badge.purple {
+  background: #e7e6ff;
+  color: #5146ed;
+  border: 1px solid #c8c5ff;
+}
+
+.review-badge.success {
+  background: #e6f6ed;
+  color: #166534;
+}
+
+.review-badge.error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ========================================
+   SUMMARY CARDS
+======================================== */
+
+.review-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.review-summary-card {
+  background: white;
+  border: 1px solid var(--review-border);
+  border-radius: 10px;
+
+  padding: 12px;
+  min-height: 80px;
+}
+
+.review-summary-card.purple {
+  border-top: 2px solid #5146ed;
+}
+
+.review-summary-card.orange {
+  border-top: 2px solid #f59e0b;
+}
+
+.review-summary-card.red {
+  border-top: 2px solid #ef4444;
+}
+
+.review-summary-card h3 {
+  font-size: 14px;
+  font-weight: 650;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin: 0 0 8px;
+}
+
+.summary-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.summary-filter-buttons button {
+  border: 1px solid var(--review-border);
+  background: white;
+  color: var(--review-text);
+
+  border-radius: 7px;
+  padding: 5px 9px;
+
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.summary-filter-buttons button:hover,
+.summary-filter-buttons button.active {
+  border-color: var(--review-primary);
+  color: var(--review-primary);
+  background: #f6f5ff;
+}
+
+/* ========================================
+   MAIN WORKSPACE
+======================================== */
+
+.review-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 2.7fr) minmax(280px, 1.1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.review-issues-panel,
+.review-detail-panel {
+  background: white;
+  border: 1px solid var(--review-border);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.review-issues-panel {
+  padding: 12px;
+  overflow: hidden;
+}
+
+.issues-heading {
+  margin-bottom: 10px;
+}
+
+.issues-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ========================================
+   FILTERS
+======================================== */
+
+.review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.review-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  border: 1px solid var(--review-border);
+  border-radius: 7px;
+  padding: 0 10px;
+
+  height: 30px;
+  min-width: 120px;
+  flex: 1;
+}
+
+.review-search svg {
+  color: var(--review-muted);
+  flex-shrink: 0;
+}
+
+.review-search input {
+  border: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+
+  font-size: 12px;
+  color: var(--review-text);
+  background: transparent;
+}
+
+.review-filters select {
+  height: 30px;
+  padding: 0 8px;
+
+  background: white;
+  color: var(--review-muted);
+
+  border: 1px solid var(--review-border);
+  border-radius: 7px;
+
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 125px;
+}
+
+.review-filters.second-row {
+  justify-content: space-between;
+}
+
+.show-resolved {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  font-size: 12px;
+  color: var(--review-muted);
+
+  border: 1px solid var(--review-border);
+  border-radius: 7px;
+
+  padding: 6px 9px;
+  cursor: pointer;
+}
+
+.show-resolved input {
+  accent-color: var(--review-primary);
+}
+
+.clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  background: white;
+  border: 1px solid var(--review-border);
+  border-radius: 7px;
+
+  padding: 6px 9px;
+  font-size: 12px;
+  color: var(--review-muted);
+  cursor: pointer;
+}
+
+/* ========================================
+   ISSUES TABLE
+======================================== */
+
+.issues-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.issues-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.issues-table th {
+  text-align: left;
+  color: #5b6681;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  padding: 10px 7px;
+  white-space: nowrap;
+}
+
+.issues-table td {
+  font-size: 12px;
+  line-height: 1.55;
+
+  padding: 8px 7px;
+  border-bottom: 1px solid #e2e7f0;
+
+  color: var(--review-text);
+  vertical-align: middle;
+
+  overflow-wrap: anywhere;
+}
+
+.issues-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.issues-table tbody tr:hover {
+  background: #f6f7ff;
+}
+
+.issues-table tbody tr.selected-row {
+  background: #eef0ff;
+}
+
+.issues-table th:nth-child(1),
+.issues-table td:nth-child(1) {
+  width: 13%;
+}
+
+.issues-table th:nth-child(2),
+.issues-table td:nth-child(2) {
+  width: 13%;
+}
+
+.issues-table th:nth-child(3),
+.issues-table td:nth-child(3) {
+  width: 13%;
+}
+
+.issues-table th:nth-child(4),
+.issues-table td:nth-child(4) {
+  width: 19%;
+}
+
+.issues-table th:nth-child(5),
+.issues-table td:nth-child(5) {
+  width: 12%;
+}
+
+.issues-table th:nth-child(6),
+.issues-table td:nth-child(6) {
+  width: 18%;
+}
+
+.issues-table th:nth-child(7),
+.issues-table td:nth-child(7) {
+  width: 12%;
+}
+
+.table-action {
+  min-width: 65px;
+  height: 31px;
+
+  background: white;
+  border: 1px solid var(--review-primary);
+
+  border-radius: 6px;
+  color: var(--review-primary);
+
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.table-action.active {
+  background: var(--review-primary);
+  color: white;
+}
+
+.issues-table-footer {
+  font-size: 11px;
+  color: var(--review-muted);
+  margin: 10px 0 0;
+}
+
+/* ========================================
+   PRIORITY
+======================================== */
+
+.priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.priority.high {
+  color: #17213d;
+}
+
+.priority.medium {
+  color: #17213d;
+}
+
+.priority.low {
+  color: #64748b;
+}
+
+/* ========================================
+   RIGHT REVIEW PANEL
+======================================== */
+
+.review-detail-panel {
+  display: flex;
+  flex-direction: column;
+
+  padding: 12px;
+  min-height: 100%;
+}
+
+.detail-panel-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.detail-heading h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 650;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin: 14px 0 9px;
+}
+
+.detail-footer {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.detail-footer .review-action-button {
+  min-width: 130px;
+  min-height: 40px;
+  font-weight: 600;
+}
+
+/* ========================================
+   COMPARE VALUES
+======================================== */
+
+.compare-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.compare-card {
+  min-width: 0;
+  border: 1px solid var(--review-border);
+  border-radius: 8px;
+
+  padding: 9px 8px;
+  font-size: 12px;
+
+  overflow-wrap: anywhere;
+}
+
+.compare-card strong {
+  display: block;
+  font-weight: 650;
+  margin-bottom: 3px;
+}
+
+.compare-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.compare-card span {
+  display: block;
+  color: var(--review-muted);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+.compare-card.full-card {
+  margin-bottom: 8px;
+}
+
+.text-link {
+  border: none;
+  background: none;
+  color: var(--review-muted);
+  font-size: 11px;
+  padding: 0;
+  margin-top: 3px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ========================================
+   ACTION BUTTONS
+======================================== */
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  margin-bottom: 7px;
+}
+
+.review-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  min-height: 33px;
+  padding: 0 11px;
+
+  background: var(--review-primary);
+  color: white;
+
+  border: 1px solid var(--review-primary);
+  border-radius: 7px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.review-action-button:hover {
+  background: #4338ca;
+  border-color: #4338ca;
+}
+
+.review-action-button.outline {
+  background: white;
+  color: var(--review-primary);
+  border-color: var(--review-primary);
+}
+
+.review-action-button.outline:hover {
+  background: var(--review-primary-light);
+}
+
+/* ========================================
+   INPUTS AND EVIDENCE
+======================================== */
+
+.review-input {
+  width: 100%;
+  height: 35px;
+
+  padding: 0 10px;
+
+  border: 1px solid var(--review-border);
+  border-radius: 7px;
+
+  font-size: 12px;
+  outline: none;
+
+  color: var(--review-text);
+  background: white;
+
+  margin-top: 8px;
+}
+
+.review-input:focus {
+  border-color: var(--review-primary);
+  box-shadow: 0 0 0 2px #5146ed18;
+}
+
+.extracted-value,
+.importance-card {
+  border: 1px solid var(--review-border);
+  border-radius: 8px;
+  padding: 9px;
+
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
+.extracted-value strong,
+.importance-card strong {
+  display: block;
+  font-weight: 650;
+}
+
+.extracted-value p,
+.importance-card p {
+  margin: 2px 0 0;
+  line-height: 1.5;
+}
+
+.reason-box {
+  background: #eef0ff;
+  border-left: 3px solid var(--review-primary);
+
+  border-radius: 5px;
+  padding: 9px;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  margin-top: 9px;
+  margin-bottom: 9px;
+}
+
+.evidence-box {
+  background: #f0f2fa;
+  border: 1px dashed var(--review-border);
+  border-radius: 7px;
+
+  padding: 9px;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  margin: 9px 0;
+}
+
+.evidence-box span {
+  color: var(--review-muted);
+}
+
+.detail-help {
+  font-size: 11px;
+  color: var(--review-muted);
+  line-height: 1.5;
+
+  margin-top: 10px;
+}
+
+/* ========================================
+   SAVED STATE
+======================================== */
+
+.saved-state {
+  padding-top: 30px;
+}
+
+.saved-message {
+  background: #dcfce7;
+  border: 1px solid #16a34a;
+  border-radius: 8px;
+
+  padding: 12px;
+  color: #166534;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.saved-message strong {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.saved-message p {
+  margin: 3px 0;
+}
+
+.saved-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.empty-panel {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--review-muted);
+}
+
+.empty-panel h3 {
+  color: var(--review-text);
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 1200px) {
+  .review-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-detail-panel {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 900px) {
+  .review-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-summary-card:last-child {
+    grid-column: span 2;
+  }
+
+  .review-center-content {
+    padding: 14px;
+  }
+
+  .review-page-heading {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .review-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-summary-card:last-child {
+    grid-column: auto;
+  }
+
+  .review-user-info {
+    display: none;
+  }
+
+  .review-page-heading h1 {
+    font-size: 20px;
+  }
+
+  .review-filters {
+    align-items: stretch;
+  }
+
+  .review-filters select {
+    flex: 1;
+    max-width: none;
+  }
+
+  .review-search {
+    flex-basis: 100%;
+  }
+
+  .compare-values {
+    grid-template-columns: 1fr;
+  }
+
+  .compare-card {
+    padding: 10px;
+  }
+
+  .review-detail-panel {
+    padding: 10px;
+  }
+
+  .issues-table {
+    min-width: 760px;
+  }
+}
