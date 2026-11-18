@@ -50,10 +50,16 @@ export default function EditDrawer({ title, sub, badge, note, rows, init = {}, i
           {r.map((f) => <FieldInput key={f[0]} f={f} v={v} set={set} disabled={f[0] === 'end' && !!v.current} />)}
         </div>
       ))}
-      {item?.sources?.length > 0 && !item.sources.includes('manual') && (
+      {item?.sources?.length > 0 && (
         <div className="srcbox">
-          <dl className="kv"><dt>Source</dt><dd><SourceList ids={item.sources} /></dd>{item.conf && <><dt>Confidence</dt><dd>{item.conf}</dd></>}</dl>
-          <button className="btn ghost sm" onClick={() => onViewSource(item.sources[0])}>View source</button>
+          <dl className="kv">
+            <dt>Source</dt>
+            <dd><SourceList ids={item.sources} /></dd>
+            {item.conf && <><dt>Confidence</dt><dd>{item.conf}</dd></>}
+          </dl>
+          {onViewSource && !item.sources.includes('manual') && (
+            <button className="btn ghost sm" onClick={() => onViewSource(item.sources[0])}>View source</button>
+          )}
           <p className="hint">Original documents stay unchanged. Edits only affect your profile.</p>
         </div>
       )}

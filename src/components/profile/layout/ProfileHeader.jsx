@@ -20,9 +20,24 @@ export default function ProfileHeader({ profile: pr, hasIssues, comp, onEdit, on
         </div>
         <p className="role">{pr.title}</p>
         <div className="contact">
-          {pr.email && <span><Mail size={16} />{pr.email}</span>}
-          {pr.location && <span><MapPin size={16} />{pr.location}</span>}
-          {pr.phone && <span><Phone size={16} />{pr.phone}</span>}
+          {pr.email && (
+            <a href={`mailto:${pr.email}`} className="contact-link">
+              <Mail size={16} />
+              <span>{pr.email}</span>
+            </a>
+          )}
+          {pr.location && (
+            <span>
+              <MapPin size={16} />
+              <span>{pr.location}</span>
+            </span>
+          )}
+          {pr.phone && (
+            <a href={`tel:${pr.phone.replace(/\s+/g, '')}`} className="contact-link">
+              <Phone size={16} />
+              <span>{pr.phone}</span>
+            </a>
+          )}
         </div>
         {pr.linkedin && <a className="li" href={liHref} target="_blank" rel="noopener noreferrer"><InIcon />{pr.linkedin}</a>}
         <div className="tags">{[pr.employment, ...(pr.tags || [])].filter(Boolean).map((t) => <span key={t}>{t}</span>)}</div>

@@ -112,7 +112,7 @@ function mapClaim(record, exportedClaim) {
         org: values.role ?? "",
         start: values.startDate ?? "",
         end: values.endDate ?? "",
-        current: !values.endDate,
+        current: Boolean(record.current ?? values.current),
         link: values.url ?? "",
         description: values.description ?? "",
         skills: values.skills ?? [],
@@ -341,6 +341,7 @@ export default function useProfileData() {
     );
     const updatedItem = {
       ...mapClaim(record, null),
+      ...(changes.current !== undefined ? { current: Boolean(changes.current) } : {}),
       sources: item.sources,
     };
     setD((state) => ({
@@ -354,7 +355,10 @@ export default function useProfileData() {
       CLAIM_TYPES[key],
       valuesForClaim(key, item),
     );
-    const createdItem = mapClaim(record, null);
+    const createdItem = {
+      ...mapClaim(record, null),
+      ...(item.current !== undefined ? { current: Boolean(item.current) } : {}),
+    };
     setD((state) => ({
       ...state,
       [key]: [...state[key], createdItem],

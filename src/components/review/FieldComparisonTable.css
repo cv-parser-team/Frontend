@@ -205,13 +205,15 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  flex: 1;
 }
 
 .coalesce-choice-text {
   font-size: 13px;
   line-height: 1.45;
   color: #1e293b;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .coalesce-selected-pill {

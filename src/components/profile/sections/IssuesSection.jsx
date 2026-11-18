@@ -20,7 +20,7 @@ const ISSUE_CATEGORIES = {
   review: { label: 'Approval', cardLabel: 'Pending approval', action: 'Review' },
   extraction: { label: 'Review required', cardLabel: 'Review required', action: 'Review' },
   conflict: { label: 'Conflicts', cardLabel: 'Conflict', action: 'Resolve' },
-  duplicate: { label: 'Duplicates', cardLabel: 'Duplicate', action: 'Compare' },
+  duplicate: { label: 'Suspected duplicates', cardLabel: 'Suspected duplicate', action: 'Compare' },
   quality: { label: 'Data quality', cardLabel: 'Data quality', action: 'Review' },
   missing: { label: 'Missing info', cardLabel: 'Missing info', action: 'Review' },
 };

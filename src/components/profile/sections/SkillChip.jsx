@@ -1,17 +1,21 @@
-import { Clock, Pencil, X } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { cx } from '../../../utils/helpers';
 
-export default function SkillChip({ skill: s, editing, onReview, onEdit, onRemove }) {
-  const asBtn = s.low && !editing;
-  const C = asBtn ? 'button' : 'span';
+export default function SkillChip({ skill: s, onReview, onEdit }) {
+  const handleClick = s.low ? onReview : onEdit;
   return (
-    <C className={cx('chip', s.low && 'warn')} title={s.level} onClick={asBtn ? onReview : undefined}>
-      {s.name}
-      {s.low && <em className="mini"><Clock size={12} /> Needs Review</em>}
-      {editing && <>
-        <button className="chip-edit" aria-label={`Edit ${s.name}`} onClick={(event) => { event.stopPropagation(); onEdit(); }}><Pencil size={13} /></button>
-        <button className="chip-x" aria-label={`Remove ${s.name}`} onClick={(event) => { event.stopPropagation(); onRemove(); }}><X size={14} /></button>
-      </>}
-    </C>
+    <button
+      type="button"
+      className={cx('chip', s.low && 'warn')}
+      title={s.level || s.name}
+      onClick={handleClick}
+    >
+      <span className="chip-label">{s.name}</span>
+      {s.low && (
+        <em className="mini">
+          <Clock size={11} /> Needs Review
+        </em>
+      )}
+    </button>
   );
 }
