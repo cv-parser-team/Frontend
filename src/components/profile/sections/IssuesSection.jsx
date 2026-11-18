@@ -9,6 +9,8 @@ import {
 } from '../../../api/candidateApi';
 import {
   extractRawValue,
+  getProposalPairKeys,
+  groupMergeProposals,
   SAMPLE_SCALE_AI_PROPOSAL,
 } from '../../../utils/coalesceUtils';
 import './IssuesSection.css';
@@ -130,8 +132,9 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
   const areaCategory = getProposalCategory(proposal);
   const title = getProposalTitle(proposal);
   const conflictingFields = getConflictingFields(proposal);
-  const docLeft = proposal.left?.documentName || 'Resume.pdf';
-  const docRight = proposal.right?.documentName || 'LinkedIn export';
+  const sourceCount = proposal.claims?.length || 2;
+  const docLeft = proposal.left?.documentName || 'Source 1';
+  const docRight = proposal.right?.documentName || 'Source 2';
 
   const conflictCount = conflictingFields.length;
   const conflictText =
@@ -163,7 +166,10 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
         </div>
         <h4 className="issue-card-title" title={title}>{title}</h4>
         <p className="issue-card-description">
-          {docLeft} vs. {docRight} · {conflictText}
+          {proposal.isGroup
+            ? `${sourceCount} related sources`
+            : `${docLeft} vs. ${docRight}`}{' '}
+          · {conflictText}
         </p>
       </div>
 
@@ -224,6 +230,10 @@ export default function IssuesSection({
   const [resolvedPairKeys, setResolvedPairKeys] = useState(() => new Set());
   const mergeCandidates =
     propMergeCandidates !== undefined ? propMergeCandidates : internalCandidates;
+  const candidateGroups = useMemo(
+    () => groupMergeProposals(mergeCandidates),
+    [mergeCandidates]
+  );
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -235,12 +245,12 @@ export default function IssuesSection({
     items.forEach((item) => {
       counts[getIssueCategory(item)] += 1;
     });
-    mergeCandidates.forEach((proposal) => {
+    candidateGroups.forEach((proposal) => {
       counts[getProposalIssueCategory(proposal)] += 1;
     });
-    counts.all = items.length + mergeCandidates.length;
+    counts.all = items.length + candidateGroups.length;
     return counts;
-  }, [items, mergeCandidates]);
+  }, [items, candidateGroups]);
 
   const effectiveCategory =
     selectedCategory === 'all' || categoryCounts[selectedCategory] > 0
@@ -252,8 +262,8 @@ export default function IssuesSection({
       : items.filter((item) => getIssueCategory(item) === effectiveCategory);
   const visibleCandidates =
     effectiveCategory === 'all'
-      ? mergeCandidates
-      : mergeCandidates.filter(
+      ? candidateGroups
+      : candidateGroups.filter(
           (proposal) => getProposalIssueCategory(proposal) === effectiveCategory
         );
   const categoryFilters = Object.entries(ISSUE_CATEGORIES).filter(
@@ -267,25 +277,20 @@ export default function IssuesSection({
         const candidates = await getMyClaimMergeCandidates();
         if (Array.isArray(candidates) && candidates.length > 0) {
           const filtered = candidates.filter(
-            (c) =>
-              !currentResolvedKeys.has(
-                `${c.left?.claimId}-${c.right?.claimId}`
+            (candidate) =>
+              !getProposalPairKeys(candidate).some((key) =>
+                currentResolvedKeys.has(key)
               )
           );
           setInternalCandidates(filtered);
           onMergeCandidatesChange?.(filtered);
         } else {
-          // Fallback to sample candidate proposal so comparison is immediately accessible
-          const sampleKey = `${SAMPLE_SCALE_AI_PROPOSAL.left?.claimId}-${SAMPLE_SCALE_AI_PROPOSAL.right?.claimId}`;
-          const filtered = currentResolvedKeys.has(sampleKey)
-            ? []
-            : [SAMPLE_SCALE_AI_PROPOSAL];
-          setInternalCandidates(filtered);
-          onMergeCandidatesChange?.(filtered);
+          setInternalCandidates([]);
+          onMergeCandidatesChange?.([]);
         }
       } catch {
         // On connection error or offline fallback, provide sample proposal unless already resolved
-        const sampleKey = `${SAMPLE_SCALE_AI_PROPOSAL.left?.claimId}-${SAMPLE_SCALE_AI_PROPOSAL.right?.claimId}`;
+        const sampleKey = getProposalPairKeys(SAMPLE_SCALE_AI_PROPOSAL)[0];
         const filtered = currentResolvedKeys.has(sampleKey)
           ? []
           : [SAMPLE_SCALE_AI_PROPOSAL];
@@ -341,7 +346,11 @@ export default function IssuesSection({
         }
       } catch (err) {
         // If simulated sample proposal in offline/test environment, permit local merge
-        if (batchAction.leftClaimId === SAMPLE_SCALE_AI_PROPOSAL.left?.claimId) {
+        const actionClaimIds =
+          batchAction.action === 'merge_claim_group'
+            ? batchAction.claims.map(({ claimId }) => claimId)
+            : [batchAction.leftClaimId, batchAction.rightClaimId];
+        if (actionClaimIds.includes(SAMPLE_SCALE_AI_PROPOSAL.left?.claimId)) {
           console.info('Simulated merge applied for sample proposal:', batchAction);
         } else {
           throw err;
@@ -349,20 +358,17 @@ export default function IssuesSection({
       }
     }
 
-    // Success flow: track resolved pair, close modal, and refresh
-    const pairKey = `${batchAction.leftClaimId}-${batchAction.rightClaimId}`;
+    // Success flow: track every resolved proposal edge, close modal, and refresh.
+    const resolvedKeys = getProposalPairKeys(selectedProposal);
     const nextResolvedKeys = new Set(resolvedPairKeys);
-    nextResolvedKeys.add(pairKey);
+    resolvedKeys.forEach((key) => nextResolvedKeys.add(key));
     setResolvedPairKeys(nextResolvedKeys);
 
     setSelectedProposal(null);
     setInternalCandidates((prev) =>
       prev.filter(
-        (p) =>
-          !(
-            p.left?.claimId === batchAction.leftClaimId &&
-            p.right?.claimId === batchAction.rightClaimId
-          )
+        (proposal) =>
+          !getProposalPairKeys(proposal).some((key) => nextResolvedKeys.has(key))
       )
     );
 
@@ -372,12 +378,14 @@ export default function IssuesSection({
     }
   };
 
-  const handleMarkDifferent = async (leftClaimId, rightClaimId) => {
+  const handleMarkDifferent = async (leftClaim, rightClaim) => {
+    const leftClaimId = leftClaim?.claimId;
+    const rightClaimId = rightClaim?.claimId;
     if (onMarkDifferentProposal) {
       await onMarkDifferentProposal(leftClaimId, rightClaimId);
     } else {
       try {
-        await markMyClaimsDifferent(leftClaimId, rightClaimId);
+        await markMyClaimsDifferent(leftClaim, rightClaim);
       } catch (err) {
         if (leftClaimId === SAMPLE_SCALE_AI_PROPOSAL.left?.claimId) {
           console.info('Simulated mark-different applied for sample proposal');
@@ -387,7 +395,7 @@ export default function IssuesSection({
       }
     }
 
-    const pairKey = `${leftClaimId}-${rightClaimId}`;
+    const pairKey = [leftClaimId, rightClaimId].sort().join(':');
     const nextResolvedKeys = new Set(resolvedPairKeys);
     nextResolvedKeys.add(pairKey);
     setResolvedPairKeys(nextResolvedKeys);
@@ -410,8 +418,8 @@ export default function IssuesSection({
   };
 
   const totalCount =
-    (total !== undefined ? total : items.length) + mergeCandidates.length;
-  const hasContent = mergeCandidates.length > 0 || items.length > 0;
+    (total !== undefined ? total : items.length) + candidateGroups.length;
+  const hasContent = candidateGroups.length > 0 || items.length > 0;
   const hasVisibleContent = visibleCandidates.length > 0 || visibleItems.length > 0;
 
   return (
@@ -448,9 +456,7 @@ export default function IssuesSection({
 
         {/* Merge candidate proposals */}
         {visibleCandidates.map((proposal, idx) => {
-          const key = `merge-${proposal.left?.claimId || idx}-${
-            proposal.right?.claimId || idx
-          }`;
+          const key = `merge-${proposal.groupKey || getProposalPairKeys(proposal)[0] || idx}`;
           return (
             <CandidateIssueCard
               key={key}

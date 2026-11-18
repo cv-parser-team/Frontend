@@ -36,6 +36,10 @@
   font-size: 13px;
 }
 
+.coalesce-table--multi {
+  min-width: calc(180px + (var(--source-count) * 210px));
+}
+
 /* ---------------- Table Headers ---------------- */
 
 .coalesce-table thead th {
@@ -146,6 +150,14 @@
   background: #ffffff;
   transition: all 0.15s ease-in-out;
   user-select: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+
+.coalesce-choice-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .coalesce-choice-card:hover {

@@ -137,28 +137,22 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
       />;
     }
     case 'claimReview': {
-      const collections = [
-        ['skills', 'Skills'],
-        ['experience', 'Work Experience'],
-        ['education', 'Education'],
-        ['projects', 'Projects'],
-        ['certifications', 'Certifications'],
-        ['languages', 'Languages'],
-      ];
-      const found = collections
-        .map(([key, area]) => ({
-          key,
-          area,
-          item: d[key].find((claim) => claim.id === id),
-        }))
-        .find(({ item }) => item);
-      return found && <ClaimReviewDrawer
+      const item = d.pendingClaims.find((claim) => claim.id === id);
+      const areas = {
+        skills: 'Skills',
+        experience: 'Work Experience',
+        education: 'Education',
+        projects: 'Projects',
+        certifications: 'Certifications',
+        languages: 'Languages',
+      };
+      return item && <ClaimReviewDrawer
         key={id}
-        item={found.item}
-        area={found.area}
+        item={item}
+        area={areas[item._collection] || 'Profile'}
         onClose={close}
         onReview={async (status) => {
-          await reviewClaim(found.key, id, status);
+          await reviewClaim(item._collection, id, status);
           close();
         }}
       />;

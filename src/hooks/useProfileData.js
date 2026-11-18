@@ -35,6 +35,7 @@ const EMPTY_DATA = {
   projects: [],
   certifications: [],
   languages: [],
+  pendingClaims: [],
   documents: [],
   reviewItems: [],
 };
@@ -226,6 +227,7 @@ function mapData(candidate, claims, exportedProfile, documents, reviewItems) {
     certifications: [],
     languages: [],
   };
+  const pendingClaims = [];
 
   for (const record of claims) {
     if (record.status === "rejected") continue;
@@ -235,7 +237,12 @@ function mapData(candidate, claims, exportedProfile, documents, reviewItems) {
     if (!key) continue;
 
     const item = mapClaim(record, exportedById.get(record.claimId));
-    if (item) collections[key].push(item);
+    if (!item) continue;
+    if (record.status === "accepted") {
+      collections[key].push(item);
+    } else if (record.status === "pending") {
+      pendingClaims.push({ ...item, _collection: key });
+    }
   }
 
   for (const document of documents) {
@@ -258,6 +265,7 @@ function mapData(candidate, claims, exportedProfile, documents, reviewItems) {
       sources: [],
     },
     ...collections,
+    pendingClaims,
     documents,
     reviewItems,
   };
@@ -418,20 +426,31 @@ export default function useProfileData() {
   };
 
   const reviewClaim = async (key, id, status) => {
-    const item = d[key].find((record) => record.id === id);
+    const item = d.pendingClaims.find((record) => record.id === id);
     if (!item) throw new Error("This profile entry is no longer available.");
     const record = await reviewMyClaim(id, status, item._version);
     if (status === "rejected") {
       setD((state) => ({
         ...state,
-        [key]: state[key].filter((entry) => entry.id !== id),
+        pendingClaims: state.pendingClaims.filter((entry) => entry.id !== id),
       }));
       return;
     }
     const updatedItem = { ...mapClaim(record, null), sources: item.sources };
     setD((state) => ({
       ...state,
-      [key]: state[key].map((entry) => (entry.id === id ? updatedItem : entry)),
+      pendingClaims: state.pendingClaims.filter((entry) => entry.id !== id),
+      [key]: [...state[key].filter((entry) => entry.id !== id), updatedItem],
+      ...(key === "skills"
+        ? {
+            profile: {
+              ...state.profile,
+              tags: [...state.skills, updatedItem]
+                .slice(0, 4)
+                .map((skill) => skill.name),
+            },
+          }
+        : {}),
     }));
   };
 

@@ -4,7 +4,9 @@ import {
   ApiError,
   saveToken,
   getToken,
-  clearToken,
+  clearSession,
+  ensureAccessToken,
+  isTokenExpired,
 } from "./axiosClient";
 import { getMyCandidateRecord } from "./candidateApi.js";
 
@@ -228,9 +230,7 @@ export async function logout() {
   try {
     await apiRequest("/api/auth/logout", { method: "POST" });
   } finally {
-    clearToken();
-    localStorage.removeItem("luminaCV_userId");
-    localStorage.removeItem("luminaCV_user");
+    clearSession();
   }
 }
 
@@ -273,5 +273,11 @@ export function getUserId() {
 // --------------------------------------------------
 
 export function isAuthenticated() {
-  return Boolean(getToken());
+  const token = getToken();
+  return Boolean(token && !isTokenExpired(token));
+}
+
+export async function restoreSession() {
+  await ensureAccessToken();
+  return true;
 }
