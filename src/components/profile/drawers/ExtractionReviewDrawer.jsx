@@ -4,6 +4,7 @@ import DrawerFooter from './DrawerFooter';
 import Badge from '../ui/Badge';
 import Callout from '../ui/Callout';
 import { SOURCES } from '../../../data/profileData';
+import { summarizeIssues } from '../../../utils/issueHints';
 
 const CLAIM_FIELDS = {
   skill: [{ name: 'name', label: 'Skill', required: true }],
@@ -73,6 +74,7 @@ export default function ExtractionReviewDrawer({ item, onClose, onResolve, onDis
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const sourceName = SOURCES[item.documentId]?.label || 'Source document';
+  const { fieldHints } = summarizeIssues(item.issues ?? []);
   const missingRequired = fields.some(
     ({ name, required }) => required && !values[name]?.trim()
   );
@@ -145,26 +147,32 @@ export default function ExtractionReviewDrawer({ item, onClose, onResolve, onDis
         Correct the extracted values below. Saving adds this item to your profile
         and marks it as reviewed.
       </Callout>
-      {fields.map((field) => (
-        <label className="fld" key={field.name}>
-          <span>{field.label}{field.required ? ' *' : ''}</span>
-          {field.multiline
-            ? <textarea
-                className="in"
-                rows={field.list ? 2 : 4}
-                value={values[field.name] ?? ''}
-                onChange={(event) => update(field.name, event.target.value)}
-                placeholder={field.list ? 'Separate items with commas' : ''}
-              />
-            : <input
-                className="in"
-                type="text"
-                value={values[field.name] ?? ''}
-                onChange={(event) => update(field.name, event.target.value)}
-                placeholder={field.date ? 'YYYY or YYYY-MM' : field.url ? 'https://' : ''}
-              />}
-        </label>
-      ))}
+      {fields.map((field) => {
+        const hasWarning = fieldHints.has(field.name);
+        return (
+          <label className={`fld${hasWarning ? ' fld--warning' : ''}`} key={field.name}>
+            <span>{field.label}{field.required ? ' *' : ''}</span>
+            {field.multiline
+              ? <textarea
+                  className={`in${hasWarning ? ' in--warning' : ''}`}
+                  rows={field.list ? 2 : 4}
+                  value={values[field.name] ?? ''}
+                  onChange={(event) => update(field.name, event.target.value)}
+                  placeholder={field.list ? 'Separate items with commas' : ''}
+                />
+              : <input
+                  className={`in${hasWarning ? ' in--warning' : ''}`}
+                  type="text"
+                  value={values[field.name] ?? ''}
+                  onChange={(event) => update(field.name, event.target.value)}
+                  placeholder={field.date ? 'YYYY or YYYY-MM' : field.url ? 'https://' : ''}
+                />}
+            {hasWarning && (
+              <small className="field-warning">{fieldHints.get(field.name)}</small>
+            )}
+          </label>
+        );
+      })}
       {error && <p className="err" role="alert">{error}</p>}
       <p className="hint">Source evidence: {item.sources?.join(', ') || 'Not available'}</p>
     </Drawer>

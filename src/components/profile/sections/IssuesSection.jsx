@@ -128,7 +128,6 @@ function formatFieldName(name) {
 
 function CandidateIssueCard({ proposal, onOpenComparison }) {
   const issueCategory = getProposalIssueCategory(proposal);
-  const categoryConfig = ISSUE_CATEGORIES[issueCategory];
   const areaCategory = getProposalCategory(proposal);
   const title = getProposalTitle(proposal);
   const conflictingFields = getConflictingFields(proposal);
@@ -159,9 +158,6 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
     >
       <div className="issue-card-info">
         <div className="issue-card-meta">
-          <span className={`issue-type-pill issue-type-pill--${issueCategory}`}>
-            {categoryConfig.cardLabel}
-          </span>
           <span className="issue-area-label">{areaCategory}</span>
         </div>
         <h4 className="issue-card-title" title={title}>{title}</h4>
@@ -193,16 +189,14 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
 function IssueItem({ issue: i, onClick }) {
   const issueCategory = getIssueCategory(i);
   const category = ISSUE_CATEGORIES[issueCategory];
+
   return (
     <button className={`issue-card issue-card--${issueCategory}`} onClick={onClick}>
       <span className="issue-card-info">
         <span className="issue-card-meta">
-          <span className={`issue-type-pill issue-type-pill--${issueCategory}`}>
-            {category.cardLabel}
-          </span>
           <span className="issue-area-label">{i.area}</span>
         </span>
-        <b className="issue-card-title" title={i.title}>{i.title}</b>
+        <h4 className="issue-card-title" title={i.title}>{i.title}</h4>
         <span className="issue-card-description">{i.text}</span>
       </span>
       <span className="issue-card-actions">

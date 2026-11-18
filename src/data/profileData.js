@@ -148,6 +148,7 @@ export function getIssues(d) {
       text: fields.length
         ? fields.join(' · ')
         : 'Extracted information is awaiting review.',
+      issues: item.issues ?? [],
     });
   });
 
