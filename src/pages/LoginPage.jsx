@@ -26,6 +26,10 @@ const ALERTS = {
     variant: "warning",
     text: "You were signed out on this device, but the server could not invalidate your session.",
   },
+  SESSION_EXPIRED: {
+    variant: "warning",
+    text: "Your session expired. Sign in again to continue.",
+  },
   SUCCESS: {
     variant: "success",
     text: "Signed in. Taking you to your profile…",
@@ -56,6 +60,8 @@ export default function LoginPage() {
       ? "EMAIL_NOT_VERIFIED"
       : state?.notice === "logout-error"
         ? "LOGOUT_ERROR"
+        : state?.notice === "session-expired"
+          ? "SESSION_EXPIRED"
         : null,
   );
   const [resent, setResent] = useState(false);

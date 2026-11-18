@@ -15,6 +15,7 @@ const HIDDEN_FIELDS = new Set([
   'conflict',
   'dup',
   'resolved',
+  '_collection',
 ]);
 
 export default function ClaimReviewDrawer({ item, area, onClose, onReview }) {

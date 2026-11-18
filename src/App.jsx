@@ -4,60 +4,50 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
+import { useEffect } from "react";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProfilePage from "./pages/ProfilePage";
 import UploadPage from "./pages/UploadPage";
-import ReviewCenter from "./pages/ReviewCenter";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
- import ResourcesPage from "./pages/ResourcesPage";
+import ResourcesPage from "./pages/ResourcesPage";
 import ResourceDetailPage from "./pages/ResourceDetailPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import { SESSION_EXPIRED_EVENT } from "./api/axiosClient.js";
 
-function PlaceholderPage({ title }) {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-slate-800">
-        {title}
-      </h1>
-      <p className="mt-2 text-sm text-slate-500">
-        This page is under development.
-      </p>
-    </div>
-  );
+function SessionExpiryRedirect() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const redirect = () => navigate("/login", {
+      replace: true,
+      state: { notice: "session-expired" },
+    });
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, redirect);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, redirect);
+  }, [navigate]);
+
+  return null;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
+      <SessionExpiryRedirect />
       <Routes>
-        <Route element={<DashboardLayout />}>
-    
         <Route element={<ProtectedRoute />}>
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
-
-          <Route
-            path="/upload"
-            element={<UploadPage />}
-          />
-
-             <Route
-          path="/sources"
-          element={<ResourcesPage />}
-        />
-
-        <Route
-          path="/sources/:resourceId"
-          element={<ResourceDetailPage />}
-        />
-
-         
-
+          <Route element={<DashboardLayout />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/sources" element={<ResourcesPage />} />
+            <Route path="/sources/:resourceId" element={<ResourceDetailPage />} />
+          </Route>
         </Route>
        <Route path="/login" element={<LoginPage />} />
        <Route path="/signup" element={<SignUpPage />} />
@@ -66,5 +56,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-

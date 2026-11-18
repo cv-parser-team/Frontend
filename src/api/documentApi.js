@@ -1,7 +1,9 @@
 
 import {
   apiRequest,
-  getToken,
+  ensureAccessToken,
+  expireSession,
+  refreshAccessToken,
 } from "./axiosClient";
 
 // --------------------------------------------------
@@ -30,15 +32,10 @@ export async function getDocuments() {
 // --------------------------------------------------
 
 
-export function uploadDocument(file, onProgress) {
+async function uploadDocumentAttempt(file, onProgress, canRetry) {
+  const token = await ensureAccessToken();
+
   return new Promise((resolve, reject) => {
-    const token = getToken();
-
-    if (!token) {
-      reject(new Error("Please sign in first."));
-      return;
-    }
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -53,6 +50,7 @@ export function uploadDocument(file, onProgress) {
       "POST",
       `${baseUrl}/api/candidates/me/documents?purpose=source`
     );
+    xhr.withCredentials = true;
 
     // Authentication
     xhr.setRequestHeader(
@@ -72,7 +70,7 @@ export function uploadDocument(file, onProgress) {
     };
 
     // Successful or failed HTTP response
-    xhr.onload = () => {
+    xhr.onload = async () => {
       let response;
 
       try {
@@ -86,6 +84,16 @@ export function uploadDocument(file, onProgress) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(response);
       } else {
+        if (xhr.status === 401 && canRetry) {
+          try {
+            await refreshAccessToken(token);
+            resolve(await uploadDocumentAttempt(file, onProgress, false));
+          } catch (error) {
+            reject(error);
+          }
+          return;
+        }
+        if (xhr.status === 401) expireSession();
         reject(
           new Error(
             response?.message ||
@@ -111,6 +119,10 @@ export function uploadDocument(file, onProgress) {
     // The browser adds the required multipart boundary.
     xhr.send(formData);
   });
+}
+
+export function uploadDocument(file, onProgress) {
+  return uploadDocumentAttempt(file, onProgress, true);
 }
 
 

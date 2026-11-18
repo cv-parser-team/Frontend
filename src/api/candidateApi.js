@@ -167,10 +167,15 @@ export async function resolveMyClaimBatch(actions) {
   return response.data;
 }
 
-export async function markMyClaimsDifferent(leftClaimId, rightClaimId) {
+export async function markMyClaimsDifferent(leftClaim, rightClaim) {
   const response = await apiRequest("/api/candidates/me/claims/different", {
     method: "POST",
-    body: JSON.stringify({ leftClaimId, rightClaimId }),
+    body: JSON.stringify({
+      leftClaimId: leftClaim?.claimId,
+      rightClaimId: rightClaim?.claimId,
+      leftVersion: leftClaim?.version,
+      rightVersion: rightClaim?.version,
+    }),
   });
 
   return response?.data;

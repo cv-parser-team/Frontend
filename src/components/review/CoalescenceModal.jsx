@@ -1,51 +1,28 @@
 import { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import FieldComparisonTable from './FieldComparisonTable';
-import { extractRawValue } from '../../utils/coalesceUtils';
+import {
+  buildProposalFieldMatrix,
+  getProposalClaims,
+} from '../../utils/coalesceUtils';
 import './CoalescenceModal.css';
 
 function computeInitialSelections(proposal) {
-  if (!proposal || !proposal.fields) return {};
-
+  if (!proposal) return {};
+  const matrix = buildProposalFieldMatrix(proposal);
   const initial = {};
-  const preferredSurvivorSide =
-    proposal.survivorClaimId === proposal.left?.claimId
-      ? 'left'
-      : proposal.survivorClaimId === proposal.right?.claimId
-      ? 'right'
-      : null;
-
-  for (const [field, comp] of Object.entries(proposal.fields)) {
-    const kind = comp?.kind || 'same';
-
-    if (kind === 'same' || kind === 'precision_improvement') {
-      initial[field] = {
-        source: 'auto',
-        value: extractRawValue(comp.value),
-      };
-    } else if (kind === 'enrichment') {
-      initial[field] = {
-        source: comp.from || 'both',
-        value: extractRawValue(comp.value),
-      };
-    } else if (['conflict', 'compatible', 'warning'].includes(kind)) {
-      if (preferredSurvivorSide === 'left' && comp.left) {
-        initial[field] = {
-          source: 'left',
-          value: extractRawValue(comp.left),
-        };
-      } else if (preferredSurvivorSide === 'right' && comp.right) {
-        initial[field] = {
-          source: 'right',
-          value: extractRawValue(comp.right),
-        };
-      } else {
-        initial[field] = {
-          source: null,
-          value: null,
-        };
-      }
-    }
+  for (const field of matrix.fields) {
+    const preferredValue = field.values[proposal.survivorClaimId];
+    const firstValueEntry = Object.entries(field.values).find(
+      ([, value]) => value !== null && value !== undefined
+    );
+    const selectedEntry =
+      preferredValue !== null && preferredValue !== undefined
+        ? [proposal.survivorClaimId, preferredValue]
+        : firstValueEntry;
+    initial[field.fieldName] = field.requiresChoice
+      ? { source: selectedEntry?.[0] || null, value: selectedEntry?.[1] ?? null }
+      : { source: 'auto', value: selectedEntry?.[1] ?? null };
   }
 
   return initial;
@@ -62,9 +39,8 @@ function CoalescenceModalContent({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const claims = getProposalClaims(proposal);
 
-  const docNameLeft = proposal.left?.documentName || 'Resume.pdf';
-  const docNameRight = proposal.right?.documentName || 'LinkedIn export';
   const categoryLabel =
     proposal.left?.type || proposal.left?.section || 'Work experience';
   const entityTitle =
@@ -72,14 +48,9 @@ function CoalescenceModalContent({
     proposal.fields?.employer?.value ||
     'Conflicting role details';
 
-  const unresolvedFields = proposal.unresolvedFields || [];
-  const choiceFields = unresolvedFields.length
-    ? unresolvedFields
-    : Object.entries(proposal.fields || {})
-        .filter(([, comparison]) =>
-          ['conflict', 'compatible', 'warning'].includes(comparison?.kind)
-        )
-        .map(([field]) => field);
+  const choiceFields = buildProposalFieldMatrix(proposal).fields
+    .filter((field) => field.requiresChoice)
+    .map((field) => field.fieldName);
   const remainingChoices = choiceFields.filter(
     (field) => !fieldSelections[field] || fieldSelections[field].source == null
   ).length;
@@ -111,22 +82,39 @@ function CoalescenceModalContent({
           selection.value !== undefined &&
           selection.value !== null
         ) {
-          values[field] = selection.value;
+          if (!(field === 'endDate' && selection.value === 'Present')) {
+            values[field] = selection.value;
+          }
         }
       }
 
-      const batchAction = {
-        action: 'merge_claims',
-        leftClaimId: proposal.left?.claimId,
-        rightClaimId: proposal.right?.claimId,
-        leftVersion: proposal.left?.version,
-        rightVersion: proposal.right?.version,
-        survivorClaimId: proposal.survivorClaimId || proposal.left?.claimId,
+      const endDateSelection = fieldSelections.endDate?.value;
+      const current =
+        endDateSelection === 'Present'
+          ? true
+          : endDateSelection != null
+            ? false
+            : proposal.proposedCurrent;
+      const sharedAction = {
+        survivorClaimId: proposal.survivorClaimId || claims[0]?.claimId,
         values,
-        ...(typeof proposal.proposedCurrent === 'boolean'
-          ? { current: proposal.proposedCurrent }
-          : {}),
+        ...(typeof current === 'boolean' ? { current } : {}),
       };
+      const batchAction =
+        claims.length > 2
+          ? {
+              action: 'merge_claim_group',
+              claims: claims.map(({ claimId, version }) => ({ claimId, version })),
+              ...sharedAction,
+            }
+          : {
+              action: 'merge_claims',
+              leftClaimId: claims[0]?.claimId,
+              rightClaimId: claims[1]?.claimId,
+              leftVersion: claims[0]?.version,
+              rightVersion: claims[1]?.version,
+              ...sharedAction,
+            };
 
       if (onResolve) {
         await onResolve(batchAction);
@@ -157,7 +145,7 @@ function CoalescenceModalContent({
     setErrorMessage('');
     setIsSubmitting(true);
     try {
-      await onMarkDifferent(proposal.left?.claimId, proposal.right?.claimId);
+      await onMarkDifferent(claims[0], claims[1]);
       if (onClose) {
         onClose();
       }
@@ -192,9 +180,11 @@ function CoalescenceModalContent({
       {/* Body */}
       <div className="coalesce-modal-body">
         <div className="coalesce-sources-bar">
-          <span>{docNameLeft}</span>
-          <span className="coalesce-vs">and</span>
-          <span>{docNameRight}</span>
+          {claims.map((claim, index) => (
+            <span key={claim.claimId}>
+              {claim.documentName || `Source ${index + 1}`}
+            </span>
+          ))}
           <span className="coalesce-choice-progress">
             {remainingChoices
               ? `${remainingChoices} ${remainingChoices === 1 ? 'choice' : 'choices'} remaining`
@@ -218,7 +208,7 @@ function CoalescenceModalContent({
       {/* Footer */}
       <footer className="coalesce-modal-footer">
         <div className="coalesce-footer-actions">
-          {onMarkDifferent && (
+          {onMarkDifferent && claims.length === 2 && (
             <button
               type="button"
               className="coalesce-different-btn"
@@ -259,7 +249,7 @@ export default function CoalescenceModal({
 }) {
   if (!isOpen || !proposal) return null;
 
-  const key = `${proposal.left?.claimId || 'left'}-${
+  const key = proposal.groupKey || `${proposal.left?.claimId || 'left'}-${
     proposal.right?.claimId || 'right'
   }`;
 

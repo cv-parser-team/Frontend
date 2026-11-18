@@ -107,19 +107,26 @@ export function getIssues(d) {
   d.skills.filter((s) => s.low).forEach((s) =>
     push('skill', 'Skills', s.id, s.name, 'Found once in your resume with low confidence. Confirm it is one of your skills.'));
 
-  const pendingClaims = [
-    ...d.skills.map((item) => ({ item, area: 'Skills', title: item.name })),
-    ...d.experience.map((item) => ({ item, area: 'Work Experience', title: `${item.title} · ${item.employer}` })),
-    ...d.education.map((item) => ({ item, area: 'Education', title: `${item.degree} · ${item.school}` })),
-    ...d.projects.map((item) => ({ item, area: 'Projects', title: item.name })),
-    ...d.certifications.map((item) => ({ item, area: 'Certifications', title: item.name })),
-    ...d.languages.map((item) => ({ item, area: 'Languages', title: item.name })),
-  ];
+  const pendingClaimMeta = {
+    skills: { area: 'Skills', title: (item) => item.name },
+    experience: { area: 'Work Experience', title: (item) => `${item.title} · ${item.employer}` },
+    education: { area: 'Education', title: (item) => `${item.degree} · ${item.school}` },
+    projects: { area: 'Projects', title: (item) => item.name },
+    certifications: { area: 'Certifications', title: (item) => item.name },
+    languages: { area: 'Languages', title: (item) => item.name },
+  };
 
-  pendingClaims
-    .filter(({ item }) => item.origin === 'extracted' && item.status === 'pending')
-    .forEach(({ item, area, title }) =>
-      push('claimReview', area, item.id, title, 'This extracted item needs your review before it is accepted into your profile.'));
+  (d.pendingClaims ?? []).forEach((item) => {
+    const meta = pendingClaimMeta[item._collection];
+    if (!meta) return;
+    push(
+      'claimReview',
+      meta.area,
+      item.id,
+      meta.title(item),
+      'This extracted item needs your review before it is accepted into your profile.',
+    );
+  });
 
   if (d.summary.cut) push('extract', 'Professional Summary', 'summary', 'Professional Summary', 'The last sentence was cut off in the scanned document.');
   if (!d.profile.phone) push('phone', 'Contact details', 'phone', 'Phone number', 'No phone number was found in your documents. This is optional.');
