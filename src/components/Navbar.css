@@ -1,0 +1,53 @@
+.navbar {
+  width: 100%;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+
+  background: #ffffff;
+  border-bottom: 1px solid #e1e5ec;
+
+  padding: 0 30px;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin-left: auto;
+
+  gap: 15px;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.account-info strong {
+  max-width: 150px;
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-info span {
+  max-width: 150px;
+  overflow: hidden;
+  color: #75829b;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .account-info {
+    display: none;
+  }
+}
