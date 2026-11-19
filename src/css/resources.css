@@ -458,13 +458,27 @@
 }
 
 .lumina-resource-expand {
-    border: 0;
-    background: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border: 1px solid var(--lr-primary);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.8);
     color: var(--lr-primary);
-    font-size: 11px;
-    font-weight: 650;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    margin-left: auto
+    margin-left: auto;
+    white-space: nowrap
+}
+
+.lumina-resource-expand em {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eeedff;
+    font-size: 11px;
+    font-style: normal
 }
 
 .lumina-resource-accordion {

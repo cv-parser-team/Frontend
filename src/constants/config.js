@@ -1,5 +1,15 @@
 import { AlertTriangle, Award, Briefcase, Code2, FileText, GraduationCap, Languages, Rocket } from 'lucide-react';
 
+export const LANGUAGE_PROFICIENCY_LEVELS = [
+  'A1 - Beginner',
+  'A2 - Elementary',
+  'B1 - Intermediate',
+  'B2 - Upper intermediate',
+  'C1 - Advanced',
+  'C2 - Proficient',
+  'Native',
+];
+
 // [id, label, icon] — drives the section nav bar and the section cards
 export const TABS = [
   ['issues', 'Issues', AlertTriangle], ['summary', 'Professional Summary', FileText], ['skills', 'Skills', Code2],
@@ -7,6 +17,8 @@ export const TABS = [
   ['cert', 'Certifications', Award],
   ['languages', 'Languages', Languages],
 ];
+
+export const PROFILE_TABS = TABS.filter(([id]) => id !== 'issues');
 
 // issue kind -> [label, badge tone]
 export const KIND = {
@@ -23,7 +35,10 @@ export const F = {
   ],
   summary: [[['text', 'Summary', 'area', 0, 700]]],
   skill: [[['name', 'Skill name', 'text', 1]]],
-  languages: [[['name', 'Language', 'text', 1]], [['proficiency', 'Proficiency', 'text']]],
+  languages: [
+    [['name', 'Language', 'text', 1]],
+    [['proficiency', 'Proficiency', 'select', 0, LANGUAGE_PROFICIENCY_LEVELS]],
+  ],
   exp: [
     [['title', 'Job title', 'text', 1]], [['employer', 'Employer', 'text', 1]],
     [['start', 'Start date', 'month', 1], ['end', 'End date', 'month']], [['current', 'I currently work here', 'check']],

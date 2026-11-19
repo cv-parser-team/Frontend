@@ -33,6 +33,13 @@ import {
 const ACCEPTED = ["pdf", "docx", "jpg", "jpeg", "png"];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const STATUS_POLL_INTERVAL_MS = 3000;
+const ACTIVE_DOCUMENT_STATUSES = new Set([
+  "stored",
+  "pending",
+  "queued",
+  "processing",
+]);
 
 // --------------------------------------------------
 // HELPERS
@@ -116,6 +123,12 @@ function normalizeDocument(document) {
           ? `Error: ${document.failureCode}`
           : "",
   };
+}
+
+function normalizeDocuments(documents) {
+  return documents
+    .filter((document) => document.documentId)
+    .map(normalizeDocument);
 }
 
 // --------------------------------------------------
@@ -440,7 +453,7 @@ function StatusBadge({ status }) {
     Ready: ["pill-completed", <Check size={11} />],
     Processing: [
       "pill-processing",
-      <LoaderCircle size={11} />,
+      <LoaderCircle className="spin" size={11} />,
     ],
     Pending: ["pill-queued", <RefreshCw size={11} />],
     Queued: ["pill-queued", <RefreshCw size={11} />],
@@ -728,12 +741,15 @@ function DocumentDetails({ document, onClose }) {
 
 export default function UploadPage() {
   const inputRef = useRef(null);
+  const statusPollInFlightRef = useRef(false);
+  const statusPollingGenerationRef = useRef(0);
 
   const [sources, setSources] = useState([]);
   const [queue, setQueue] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [statusError, setStatusError] = useState("");
 
   const [progress, setProgress] = useState(0);
 
@@ -749,28 +765,75 @@ export default function UploadPage() {
   // LOAD SOURCES FROM BACKEND
   // ------------------------------------------------
 
-  const loadSources = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const loadSources = useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) {
+      setLoading(true);
+      setError("");
+    }
 
     try {
       const documents = await getDocuments();
-
-      const normalized = documents
-        .filter((document) => document.documentId)
-        .map(normalizeDocument);
-
-      setSources(normalized);
+      setSources(normalizeDocuments(documents));
+      setStatusError("");
     } catch (err) {
-      setError(err.message || "Failed to load documents.");
+      const message = err.message || "Failed to load documents.";
+      if (showLoading) {
+        setError(message);
+      } else {
+        setStatusError(message);
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     loadSources();
   }, [loadSources]);
+
+  const hasActiveDocuments = sources.some((source) =>
+    ACTIVE_DOCUMENT_STATUSES.has(
+      String(source.rawStatus || "").toLowerCase()
+    )
+  );
+
+  useEffect(() => {
+    if (!hasActiveDocuments) return undefined;
+
+    const generation = statusPollingGenerationRef.current + 1;
+    statusPollingGenerationRef.current = generation;
+    const intervalId = window.setInterval(() => {
+      if (statusPollInFlightRef.current) return;
+      statusPollInFlightRef.current = true;
+
+      getDocuments()
+        .then((documents) => {
+          if (statusPollingGenerationRef.current !== generation) return;
+
+          setSources(normalizeDocuments(documents));
+          setStatusError("");
+        })
+        .catch((err) => {
+          if (statusPollingGenerationRef.current === generation) {
+            setStatusError(
+              err.message || "Failed to refresh document statuses."
+            );
+          }
+        })
+        .finally(() => {
+          statusPollInFlightRef.current = false;
+        });
+    }, STATUS_POLL_INTERVAL_MS);
+
+    return () => {
+      if (statusPollingGenerationRef.current === generation) {
+        statusPollingGenerationRef.current += 1;
+      }
+      window.clearInterval(intervalId);
+    };
+  }, [hasActiveDocuments]);
 
   // ------------------------------------------------
   // ADD FILES TO QUEUE
@@ -850,6 +913,7 @@ export default function UploadPage() {
     setUploading(true);
     setProgress(0);
     setError("");
+    setStatusError("");
     setSuccess("");
 
     let completed = 0;
@@ -890,8 +954,8 @@ export default function UploadPage() {
 
     setUploading(false);
 
-    // Reload actual records from database.
-    await loadSources();
+    // Reload actual records without replacing the table with a loading state.
+    await loadSources({ showLoading: false });
 
     if (failures.length) {
       setError(
@@ -984,6 +1048,13 @@ export default function UploadPage() {
           <div className="api-message api-error" role="alert">
             <AlertTriangle size={15} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {statusError && (
+          <div className="api-message api-error" role="alert">
+            <AlertTriangle size={15} />
+            <span>{statusError}</span>
           </div>
         )}
 

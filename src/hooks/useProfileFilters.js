@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TABS } from '../constants/config';
+import { PROFILE_TABS } from '../constants/config';
 import { isBadLink } from '../data/profileData';
 
 // search + "Needs review" filter. Returns the filtered lists for every section plus totals / flags.
@@ -28,7 +28,7 @@ export default function useProfileFilters(d, issues) {
     proj: d.projects.some((p) => isBadLink(p.link)), cert: d.certifications.some((c) => c.dup),
   };
   const visible = (id) => !filtering || list[id].length > 0;
-  const anyVisible = TABS.some(([id]) => visible(id));
+  const anyVisible = PROFILE_TABS.some(([id]) => visible(id));
 
   const reset = () => { setQ(''); setOnlyReview(false); };
 

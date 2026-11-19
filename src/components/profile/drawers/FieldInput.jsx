@@ -28,7 +28,11 @@ export default function FieldInput({ f, v, set, disabled }) {
     <label className="fld">
       <span>{label}{!!req && <b> *</b>}</span>
       {type === 'area' ? <textarea rows={5} maxLength={extra} {...common} />
-        : type === 'select' ? <select {...common}>{extra.map((o) => <option key={o}>{o}</option>)}</select>
+        : type === 'select' ? <select {...common}>
+          <option value="">Select a level</option>
+          {v[k] && !extra.includes(v[k]) && <option value={v[k]}>{v[k]}</option>}
+          {extra.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
         : <input type={type === 'list' ? 'text' : type} {...common} />}
       {type === 'area' && !!extra && <small>{v[k].length}/{extra} characters</small>}
     </label>

@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { completion, getIssues, totalExperience } from '../data/profileData';
-import useProfileData from '../hooks/useProfileData';
 import useProfileFilters from '../hooks/useProfileFilters';
 import useSections from '../hooks/useSections';
+import { PROFILE_TABS } from '../constants/config';
 import ProfileHeader from '../components/profile/layout/ProfileHeader';
 import StatsGrid from '../components/profile/layout/StatsGrid';
 import SectionNav from '../components/profile/layout/SectionNav';
 import Toolbar from '../components/profile/layout/Toolbar';
-import IssuesSection from '../components/profile/sections/IssuesSection';
 import SummarySection from '../components/profile/sections/SummarySection';
 import SkillsSection from '../components/profile/sections/SkillsSection';
 import CollectionSection from '../components/profile/sections/CollectionSection';
@@ -16,13 +16,14 @@ import SkillDialog from '../components/profile/drawers/SkillDialog';
 import '../css/profile.css';
 
 export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p) => window.location.assign(p) }) {
-  const store = useProfileData();
+  const { profileStore: store, candidateIssueCount } = useOutletContext();
   const { d, add, del, reload, loading, error } = store;
   const [dr, setDr] = useState(null); // { type, id } — a single state decides which drawer is open
   const [skillDlg, setSkillDlg] = useState(false);
   const [editSkills, setEditSkills] = useState(false);
   const [mutationError, setMutationError] = useState('');
-  const sections = useSections();
+  const sections = useSections(PROFILE_TABS);
+  const navigate = useNavigate();
 
   // Issues are derived from the data, never stored — badges, red dots and counts can't drift apart.
   const issues = useMemo(() => getIssues(d), [d]);
@@ -31,16 +32,7 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   const filters = useProfileFilters(d, issues);
   const { list, total, flagged, visible, setOnlyReview } = filters;
 
-  const [candidateIssuesCount, setCandidateIssuesCount] = useState(0);
-  const totalIssuesCount = total.issues + candidateIssuesCount;
-  const navTotal = useMemo(
-    () => ({ ...total, issues: totalIssuesCount }),
-    [total, totalIssuesCount]
-  );
-  const navFlagged = useMemo(
-    () => ({ ...flagged, issues: flagged.issues || candidateIssuesCount > 0 }),
-    [flagged, candidateIssuesCount]
-  );
+  const totalIssuesCount = total.issues + candidateIssueCount;
 
   const close = useCallback(() => setDr(null), []);
   const closeSkill = useCallback(() => setSkillDlg(false), []);
@@ -60,7 +52,7 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   const act = (a) => ({
     phone: () => setDr({ type: 'phone' }), profile: () => setDr({ type: 'profile' }), summary: () => setDr({ type: 'summary' }),
     skills: () => setSkillDlg(true), exp: () => setDr({ type: 'exp', id: 'new' }), edu: () => setDr({ type: 'edu', id: 'new' }),
-    issues: () => { setOnlyReview(true); sections.go('issues'); },
+    issues: () => navigate('/issues'),
   }[a]());
 
   const sec = (id) => ({ open: sections.open[id], onToggle: () => sections.toggle(id) });
@@ -88,24 +80,17 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
     <div className="pf">
       <div className="wrap">
         {mutationError && <p className="err" role="alert">{mutationError}</p>}
-        <ProfileHeader profile={d.profile} hasIssues={!!issues.length || candidateIssuesCount > 0} comp={comp} onEdit={() => setDr({ type: 'profile' })} onAct={act} />
+        <ProfileHeader profile={d.profile} hasIssues={!!issues.length || candidateIssueCount > 0} comp={comp} onEdit={() => setDr({ type: 'profile' })} onAct={act} />
 
         <StatsGrid education={d.education} skillsCount={d.skills.length} sourceCount={d.documents.length} totalExperience={tx} onOpenSources={goSources} />
 
-        <SectionNav total={navTotal} flagged={navFlagged} visible={visible} onGo={sections.go}
+        <SectionNav total={total} flagged={flagged} visible={visible} onGo={sections.go}
           allOpen={sections.allOpen} openCount={sections.openCount} onToggleAll={sections.toggleAll} />
 
         <Toolbar q={filters.q} onQueryChange={filters.setQ} onlyReview={filters.onlyReview}
           onOnlyReviewChange={setOnlyReview} issuesCount={totalIssuesCount} />
 
         <main className="secs">
-          {visible('issues') && (
-            <IssuesSection items={list.issues} total={total.issues} {...sec('issues')}
-              onOpenIssue={(i) => setDr({ type: i.kind, id: i.id })}
-              onMergeCandidatesChange={(candidates) => setCandidateIssuesCount(candidates.length)}
-              onRefreshProfile={reload} />
-          )}
-
           {visible('summary') && (
             <SummarySection summary={d.summary} {...sec('summary')} onEdit={() => setDr({ type: 'summary' })} />
           )}

@@ -5,6 +5,7 @@ import logo from '../assets/LuminaCV Logo Board.png';
 import {
   Network,
   UserRound,
+  AlertTriangle,
   Upload,
   Layers,
   CircleCheck,
@@ -23,7 +24,12 @@ const navigationItems = [
     label: "Profile",
     path: "/profile",
     icon: UserRound,
-    count: 248,
+    // count: 248,
+  },
+  {
+    label: "Issues",
+    path: "/issues",
+    icon: AlertTriangle,
   },
   {
     label: "Import & Upload",
@@ -45,7 +51,7 @@ const navigationItems = [
   },
 ];
 
-export default function Sidebar({ account }) {
+export default function Sidebar({ account, issueCount = 0 }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -139,6 +145,11 @@ export default function Sidebar({ account }) {
                     }`}
                   >
                     {item.count}
+                  </span>
+                )}
+                {item.path === "/issues" && (
+                  <span className="sidebar-count review-count">
+                    {issueCount}
                   </span>
                 )}
               </NavLink>

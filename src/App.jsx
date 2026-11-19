@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ResourceDetailPage from "./pages/ResourceDetailPage";
+import IssuesPage from "./pages/IssuesPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import { SESSION_EXPIRED_EVENT } from "./api/axiosClient.js";
@@ -43,6 +44,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/issues" element={<IssuesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/sources" element={<ResourcesPage />} />

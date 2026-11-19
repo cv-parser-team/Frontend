@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Search, ChevronDown, ChevronRight, GraduationCap, BriefcaseBusiness, Code2, Award } from 'lucide-react'
+import { ArrowLeft, Search, ChevronDown, ChevronRight, ChevronsDown, ChevronsUp, GraduationCap, BriefcaseBusiness, Code2, Award } from 'lucide-react'
 import { getMyClaims, updateMyClaim } from '../api/candidateApi'
 import { getDocument } from '../api/documentApi'
 import { getMyExtractionReviewItems } from '../api/extractionApi'
@@ -209,6 +209,8 @@ export default function ResourceDetailPage() {
         ? 'Image'
         : 'File'
   const needsAttention = reviewItems.length
+  const expandedCount = claimGroups.filter(group => expanded[group.id]).length
+  const allExpanded = expandedCount === claimGroups.length
   const matches = claim => {
     const valuesMatch = JSON.stringify(claim.values || {})
       .toLowerCase()
@@ -239,8 +241,9 @@ export default function ResourceDetailPage() {
         <div className="lumina-resource-filter-chips">
           {['All', 'Needs attention'].map(option => <button key={option} className={filter === option ? 'active' : ''} onClick={() => setFilter(option)}>{option}{option === 'Needs attention' ? ` (${needsAttention})` : ''}</button>)}
         </div>
-        <button className="lumina-resource-expand" onClick={() => setExpanded(Object.fromEntries(claimGroups.map(group => [group.id, !claimGroups.every(item => expanded[item.id])])))}>
-          {claimGroups.every(group => expanded[group.id]) ? 'Collapse all' : 'Expand all'}
+        <button className="lumina-resource-expand" onClick={() => setExpanded(Object.fromEntries(claimGroups.map(group => [group.id, !allExpanded])))}>
+          {allExpanded ? <ChevronsUp size={16}/> : <ChevronsDown size={16}/>}
+          {allExpanded ? 'Collapse all' : 'Expand all'}<em>{expandedCount}/{claimGroups.length} open</em>
         </button>
       </div>
       {claimGroups.map(group => {

@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
-
-const proficiencyLevels = [
-  'Native',
-  'C2 - Proficient',
-  'C1 - Advanced',
-  'B2 - Upper intermediate',
-  'B1 - Intermediate',
-  'A2 - Elementary',
-  'A1 - Beginner',
-]
+import { LANGUAGE_PROFICIENCY_LEVELS as proficiencyLevels } from '../../constants/config'
 const months = [
   ['01', 'January'], ['02', 'February'], ['03', 'March'], ['04', 'April'],
   ['05', 'May'], ['06', 'June'], ['07', 'July'], ['08', 'August'],
