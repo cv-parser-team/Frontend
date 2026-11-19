@@ -3,12 +3,12 @@ import { cx } from '../../../utils/helpers';
 import { isBadLink } from '../../../data/profileData';
 
 // Text on the left, and ONE right-aligned column (status badge + ⓘ) so every list lines up.
-export default function Row({ title, meta, desc, link, tags = [], badge, info, onClick }) {
+export default function Row({ title, meta, note, desc, link, tags = [], badge, info, onClick }) {
   const bad = isBadLink(link);
   return (
     <div className="row" role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
       <div>
-        <h3>{title}</h3>
+        <h3>{title}{note}</h3>
         {meta && <p className="meta">{meta}</p>}
         {desc && <p>{desc}</p>}
         {link && (

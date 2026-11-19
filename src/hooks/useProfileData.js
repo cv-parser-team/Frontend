@@ -71,19 +71,45 @@ function sourceIdsFor(record, exportedClaim) {
   return [...new Set(sourceIds)];
 }
 
+// Fields shown with their canonical name when normalization linked them to a
+// dictionary term ("Pyton" is shown as "Python"). Job titles keep the
+// candidate's wording, because a canonical title can differ from their real
+// title ("Backend Engineer" and "Backend Developer").
+const DISPLAYED_CANONICAL_FIELDS = {
+  skill: { name: "name" },
+  education: { degree: "degree" },
+};
+
+// The canonical name each displayed field is shown as, and what was written.
+function canonicalDisplay(record) {
+  const fields = DISPLAYED_CANONICAL_FIELDS[record.claimType] ?? {};
+  const shown = {};
+  const normalizedFrom = {};
+  for (const [field, key] of Object.entries(fields)) {
+    const normalized = record.normalized?.[field];
+    if (normalized?.value) {
+      shown[key] = normalized.value;
+      normalizedFrom[key] = normalized.original;
+    }
+  }
+  return { shown, normalizedFrom };
+}
+
 function mapClaim(record, exportedClaim) {
   const values = record.values ?? {};
+  const { shown, normalizedFrom } = canonicalDisplay(record);
   const common = {
     id: record.claimId,
     _version: record.version,
     status: record.status,
     origin: record.origin,
     sources: sourceIdsFor(record, exportedClaim),
+    normalizedFrom,
   };
 
   switch (record.claimType) {
     case "skill":
-      return { ...common, name: values.name ?? "" };
+      return { ...common, name: shown.name ?? values.name ?? "" };
     case "employment":
       return {
         ...common,
@@ -99,7 +125,7 @@ function mapClaim(record, exportedClaim) {
     case "education":
       return {
         ...common,
-        degree: values.degree ?? "",
+        degree: shown.degree ?? values.degree ?? "",
         field: values.fieldOfStudy ?? "",
         school: values.institution ?? "",
         start: values.startDate ?? "",
@@ -336,6 +362,10 @@ export default function useProfileData() {
     const record = await updateMyClaim(
       id,
       CLAIM_TYPES[key],
+      // Saving the edit panel, which explains a standardized name, confirms
+      // the values as shown: the standardized name replaces what the document
+      // said, and the warning is gone. The document's wording stays in the
+      // claim's history.
       valuesForClaim(key, { ...item, ...changes }),
       item._version,
     );

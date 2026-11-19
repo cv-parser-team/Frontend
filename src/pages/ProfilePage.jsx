@@ -13,6 +13,9 @@ import SkillsSection from '../components/profile/sections/SkillsSection';
 import CollectionSection from '../components/profile/sections/CollectionSection';
 import ActiveDrawer from '../components/profile/drawers/ActiveDrawer';
 import SkillDialog from '../components/profile/drawers/SkillDialog';
+import { COLL } from '../constants/config';
+import { groupMergeProposals } from '../utils/coalesceUtils';
+import { collapseDuplicates, indexGroupsByClaim } from '../utils/duplicateGroups';
 import '../css/profile.css';
 
 export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p) => window.location.assign(p) }) {
@@ -31,11 +34,24 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   const filters = useProfileFilters(d, issues);
   const { list, total, flagged, visible, setOnlyReview } = filters;
 
-  const [candidateIssuesCount, setCandidateIssuesCount] = useState(0);
+  // Claims the backend suspects are copies of each other, grouped the way the
+  // Issues section shows them, so its count and the tab count agree.
+  const [mergeCandidates, setMergeCandidates] = useState([]);
+  const [comparison, setComparison] = useState(null);
+  const mergeGroups = useMemo(() => groupMergeProposals(mergeCandidates), [mergeCandidates]);
+  const groupByClaim = useMemo(() => indexGroupsByClaim(mergeGroups), [mergeGroups]);
+  const candidateIssuesCount = mergeGroups.length;
   const totalIssuesCount = total.issues + candidateIssuesCount;
+  // Each list counts suspected copies once, as it shows them; the tabs and the
+  // section headers use the same counts.
+  const listTotals = useMemo(
+    () => Object.fromEntries(Object.entries(COLL).map(([type, { key }]) =>
+      [type, collapseDuplicates(d[key], groupByClaim).length])),
+    [d, groupByClaim]
+  );
   const navTotal = useMemo(
-    () => ({ ...total, issues: totalIssuesCount }),
-    [total, totalIssuesCount]
+    () => ({ ...total, ...listTotals, issues: totalIssuesCount }),
+    [total, listTotals, totalIssuesCount]
   );
   const navFlagged = useMemo(
     () => ({ ...flagged, issues: flagged.issues || candidateIssuesCount > 0 }),
@@ -64,10 +80,16 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   }[a]());
 
   const sec = (id) => ({ open: sections.open[id], onToggle: () => sections.toggle(id) });
-  const collection = (type, label) => visible(type) && (
-    <CollectionSection type={type} label={label} items={list[type]} total={total[type]} {...sec(type)}
-      onAdd={() => setDr({ type, id: 'new' })} onOpenItem={(id) => setDr({ type, id })} />
-  );
+  const collection = (type, label) => {
+    if (!visible(type)) return null;
+    return (
+      <CollectionSection type={type} label={label}
+        items={collapseDuplicates(list[type], groupByClaim, d[COLL[type].key])}
+        total={listTotals[type]} {...sec(type)}
+        onAdd={() => setDr({ type, id: 'new' })} onOpenItem={(id) => setDr({ type, id })}
+        onOpenDuplicates={setComparison} />
+    );
+  };
 
   if (loading) {
     return <div className="pf"><div className="wrap"><p className="hint">Loading profile…</p></div></div>;
@@ -102,7 +124,8 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
           {visible('issues') && (
             <IssuesSection items={list.issues} total={total.issues} {...sec('issues')}
               onOpenIssue={(i) => setDr({ type: i.kind, id: i.id })}
-              onMergeCandidatesChange={(candidates) => setCandidateIssuesCount(candidates.length)}
+              onMergeCandidatesChange={setMergeCandidates}
+              selectedProposal={comparison} onSelectedProposalChange={setComparison}
               onRefreshProfile={reload} />
           )}
 

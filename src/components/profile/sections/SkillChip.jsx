@@ -1,5 +1,6 @@
 import { Clock } from 'lucide-react';
 import { cx } from '../../../utils/helpers';
+import NormalizedNote from '../ui/NormalizedNote';
 
 export default function SkillChip({ skill: s, onReview, onEdit }) {
   const handleClick = s.low ? onReview : onEdit;
@@ -11,6 +12,8 @@ export default function SkillChip({ skill: s, onReview, onEdit }) {
       onClick={handleClick}
     >
       <span className="chip-label">{s.name}</span>
+      {/* The chip itself opens the edit panel, which explains the change. */}
+      <NormalizedNote original={s.normalizedFrom?.name} />
       {s.low && (
         <em className="mini">
           <Clock size={11} /> Needs Review

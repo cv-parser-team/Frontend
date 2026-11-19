@@ -1,5 +1,6 @@
 import Badge from '../ui/Badge';
 import Callout from '../ui/Callout';
+import { NormalizedCallout } from '../ui/NormalizedNote';
 import EditDrawer from './EditDrawer';
 import ConflictDrawer from './ConflictDrawer';
 import DuplicateDrawer from './DuplicateDrawer';
@@ -28,11 +29,14 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
     return (
       <EditDrawer key={`${type}-${id}`} title={`${item ? 'Edit' : 'Add'} ${c.noun}`} sub={item && c.sub(item)}
         badge={rv && <Badge>Needs review</Badge>}
-        note={rv && (
-          <Callout tone="amber"><b>Needs review:</b> {rv[1]}{' '}
-            <button className="lk" onClick={() => setDr({ type: rv[0], id })}>Resolve issue</button>
-          </Callout>
-        )}
+        note={<>
+          {rv && (
+            <Callout tone="amber"><b>Needs review:</b> {rv[1]}{' '}
+              <button className="lk" onClick={() => setDr({ type: rv[0], id })}>Resolve issue</button>
+            </Callout>
+          )}
+          <NormalizedCallout original={item?.normalizedFrom?.degree} shown={item?.degree} />
+        </>}
         rows={F[type]} init={item || {}} item={item} onClose={close} onViewSource={goSources}
         onSave={async (v) => {
           if (item) await upd(c.key, id, patchFor(type, item, v));
@@ -105,6 +109,7 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
       const skill = d.skills.find((x) => x.id === id);
       if (!skill) return null;
       return <EditDrawer key={id} title="Edit skill" sub={skill.name} rows={F.skill} init={skill}
+        note={<NormalizedCallout original={skill.normalizedFrom?.name} shown={skill.name} />}
         onClose={close} onSave={async (values) => { await upd('skills', id, values); close(); }}
         onDelete={async () => {
           if (window.confirm('Delete this skill from your profile?')) {

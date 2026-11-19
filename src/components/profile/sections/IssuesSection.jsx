@@ -219,6 +219,9 @@ export default function IssuesSection({
   onResolveProposal,
   onMarkDifferentProposal,
   onRefreshProfile,
+  // Optional control of the open comparison, so other sections can open it.
+  selectedProposal: controlledSelectedProposal,
+  onSelectedProposalChange,
 }) {
   const [internalCandidates, setInternalCandidates] = useState([]);
   const [resolvedPairKeys, setResolvedPairKeys] = useState(() => new Set());
@@ -228,7 +231,12 @@ export default function IssuesSection({
     () => groupMergeProposals(mergeCandidates),
     [mergeCandidates]
   );
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [internalSelectedProposal, setInternalSelectedProposal] = useState(null);
+  const selectedProposal =
+    controlledSelectedProposal !== undefined
+      ? controlledSelectedProposal
+      : internalSelectedProposal;
+  const setSelectedProposal = onSelectedProposalChange ?? setInternalSelectedProposal;
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
 

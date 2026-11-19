@@ -3,9 +3,41 @@ import { X, Loader2 } from 'lucide-react';
 import FieldComparisonTable from './FieldComparisonTable';
 import {
   buildProposalFieldMatrix,
+  extractRawValue,
   getProposalClaims,
 } from '../../utils/coalesceUtils';
 import './CoalescenceModal.css';
+
+const CLAIM_TYPE_LABELS = {
+  employment: 'Work experience',
+  education: 'Education',
+  project: 'Project',
+  certification: 'Certification',
+  skill: 'Skill',
+  language: 'Language',
+};
+
+// The fields that name an entry of each type, joined for the title.
+const TITLE_FIELDS = {
+  employment: ['jobTitle', 'employer'],
+  education: ['degree', 'institution'],
+  certification: ['title', 'issuer'],
+};
+
+// A field's value as the proposal states it: the shared value, or the first
+// side's when the copies differ.
+function proposalFieldValue(proposal, field) {
+  const comparison = proposal.fields?.[field];
+  return extractRawValue(comparison?.value ?? comparison?.left);
+}
+
+function proposalTitle(proposal) {
+  const fields = TITLE_FIELDS[proposal.claimType] || ['name'];
+  return fields
+    .map((field) => proposalFieldValue(proposal, field))
+    .filter((value) => typeof value === 'string' && value)
+    .join(' · ');
+}
 
 function computeInitialSelections(proposal) {
   if (!proposal) return {};
@@ -41,12 +73,8 @@ function CoalescenceModalContent({
   const [errorMessage, setErrorMessage] = useState('');
   const claims = getProposalClaims(proposal);
 
-  const categoryLabel =
-    proposal.left?.type || proposal.left?.section || 'Work experience';
-  const entityTitle =
-    proposal.left?.title ||
-    proposal.fields?.employer?.value ||
-    'Conflicting role details';
+  const categoryLabel = CLAIM_TYPE_LABELS[proposal.claimType] || 'Profile entry';
+  const entityTitle = proposalTitle(proposal) || 'Duplicate entries';
 
   const choiceFields = buildProposalFieldMatrix(proposal).fields
     .filter((field) => field.requiresChoice)
