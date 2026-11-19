@@ -15,24 +15,17 @@ import ActiveDrawer from '../components/profile/drawers/ActiveDrawer';
 import SkillDialog from '../components/profile/drawers/SkillDialog';
 import { COLL } from '../constants/config';
 import { groupMergeProposals } from '../utils/coalesceUtils';
-import { collapseDuplicates, indexGroupsByClaim } from '../utils/duplicateGroups';
+import { collapseDuplicates, groupReviewIssues, indexGroupsByClaim } from '../utils/duplicateGroups';
 import '../css/profile.css';
 
 export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p) => window.location.assign(p) }) {
   const store = useProfileData();
-  const { d, add, del, reload, loading, error } = store;
+  const { d, add, del, reload, loading, error, dismissReviewItem } = store;
   const [dr, setDr] = useState(null); // { type, id } — a single state decides which drawer is open
   const [skillDlg, setSkillDlg] = useState(false);
   const [editSkills, setEditSkills] = useState(false);
   const [mutationError, setMutationError] = useState('');
   const sections = useSections();
-
-  // Issues are derived from the data, never stored — badges, red dots and counts can't drift apart.
-  const issues = useMemo(() => getIssues(d), [d]);
-  const comp = useMemo(() => completion(d, issues), [d, issues]);
-  const tx = useMemo(() => totalExperience(d.experience), [d.experience]);
-  const filters = useProfileFilters(d, issues);
-  const { list, total, flagged, visible, setOnlyReview } = filters;
 
   // Claims the backend suspects are copies of each other, grouped the way the
   // Issues section shows them, so its count and the tab count agree.
@@ -41,6 +34,25 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   const mergeGroups = useMemo(() => groupMergeProposals(mergeCandidates), [mergeCandidates]);
   const groupByClaim = useMemo(() => indexGroupsByClaim(mergeGroups), [mergeGroups]);
   const candidateIssuesCount = mergeGroups.length;
+
+  // Issues are derived from the data, never stored — badges, red dots and counts can't drift apart.
+  // A pending claim that is one of several suspected copies is resolved by
+  // merging the copies, so it has no approval card of its own: accepting it
+  // alone would leave two accepted copies of the same entry.
+  // Review items that state the same fact as each other or as saved claims
+  // share one card, as duplicate claims do.
+  const { issues, reviewsByMergeGroup } = useMemo(
+    () => groupReviewIssues(
+      getIssues(d).filter((issue) => !(issue.kind === 'claimReview' && groupByClaim.has(issue.id))),
+      d.reviewItems ?? [],
+      mergeGroups
+    ),
+    [d, groupByClaim, mergeGroups]
+  );
+  const comp = useMemo(() => completion(d, issues), [d, issues]);
+  const tx = useMemo(() => totalExperience(d.experience), [d.experience]);
+  const filters = useProfileFilters(d, issues);
+  const { list, total, flagged, visible, setOnlyReview } = filters;
   const totalIssuesCount = total.issues + candidateIssuesCount;
   // Each list counts suspected copies once, as it shows them; the tabs and the
   // section headers use the same counts.
@@ -69,6 +81,19 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
       await action();
     } catch (saveError) {
       setMutationError(saveError.message || 'Unable to save this change.');
+    }
+  };
+
+  // The fact is already in the profile, so its extracted copies awaiting review
+  // add nothing. The candidate confirms before they are dismissed.
+  const dismissCopies = async (issue) => {
+    const count = issue.copies.length;
+    if (!window.confirm(`"${issue.title}" is already in your profile. Dismiss ${count === 1 ? 'its copy' : `its ${count} copies`} from your documents?`)) {
+      return;
+    }
+    for (const reviewItemId of issue.copies) {
+      const item = d.reviewItems.find((reviewItem) => reviewItem.reviewItemId === reviewItemId);
+      if (item) await dismissReviewItem(reviewItemId, item.version);
     }
   };
 
@@ -124,6 +149,8 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
           {visible('issues') && (
             <IssuesSection items={list.issues} total={total.issues} {...sec('issues')}
               onOpenIssue={(i) => setDr({ type: i.kind, id: i.id })}
+              reviewsByMergeGroup={reviewsByMergeGroup}
+              onDismissCopies={(issue) => runMutation(() => dismissCopies(issue))}
               onMergeCandidatesChange={setMergeCandidates}
               selectedProposal={comparison} onSelectedProposalChange={setComparison}
               onRefreshProfile={reload} />

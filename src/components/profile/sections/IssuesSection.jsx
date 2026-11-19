@@ -13,6 +13,7 @@ import {
   groupMergeProposals,
   SAMPLE_SCALE_AI_PROPOSAL,
 } from '../../../utils/coalesceUtils';
+import { mergeGroupKey } from '../../../utils/duplicateGroups';
 import './IssuesSection.css';
 
 const ISSUE_CATEGORIES = {
@@ -126,7 +127,7 @@ function formatFieldName(name) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-function CandidateIssueCard({ proposal, onOpenComparison }) {
+function CandidateIssueCard({ proposal, pendingReviews = 0, onOpenComparison }) {
   const issueCategory = getProposalIssueCategory(proposal);
   const areaCategory = getProposalCategory(proposal);
   const title = getProposalTitle(proposal);
@@ -166,6 +167,7 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
             ? `${sourceCount} related sources`
             : `${docLeft} vs. ${docRight}`}{' '}
           · {conflictText}
+          {pendingReviews > 0 && ` · +${pendingReviews} awaiting review`}
         </p>
       </div>
 
@@ -186,9 +188,45 @@ function CandidateIssueCard({ proposal, onOpenComparison }) {
   );
 }
 
-function IssueItem({ issue: i, onClick }) {
+function IssueItem({ issue: i, onClick, onDismissCopies }) {
   const issueCategory = getIssueCategory(i);
   const category = ISSUE_CATEGORIES[issueCategory];
+
+  // Copies of a fact already in the profile can be dismissed from the card.
+  // The card is then not a button itself, because it holds two buttons.
+  if (i.inProfile && onDismissCopies) {
+    return (
+      <div
+        className={`issue-card issue-card--${issueCategory}`}
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
+        <span className="issue-card-info">
+          <span className="issue-card-meta">
+            <span className="issue-area-label">{i.area}</span>
+          </span>
+          <h4 className="issue-card-title" title={i.title}>{i.title}</h4>
+          <span className="issue-card-description">{i.text}</span>
+        </span>
+        <span className="issue-card-actions" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="btn-open-comparison" onClick={() => onDismissCopies(i)}>
+            Dismiss {i.copies.length === 1 ? 'copy' : 'copies'}
+          </button>
+          <button type="button" className="btn-open-comparison" onClick={onClick}>
+            {category.action}
+            <ChevronRight size={14} />
+          </button>
+        </span>
+      </div>
+    );
+  }
 
   return (
     <button className={`issue-card issue-card--${issueCategory}`} onClick={onClick}>
@@ -222,6 +260,9 @@ export default function IssuesSection({
   // Optional control of the open comparison, so other sections can open it.
   selectedProposal: controlledSelectedProposal,
   onSelectedProposalChange,
+  // Review items each merge group card stands for, by merge group key.
+  reviewsByMergeGroup,
+  onDismissCopies,
 }) {
   const [internalCandidates, setInternalCandidates] = useState([]);
   const [resolvedPairKeys, setResolvedPairKeys] = useState(() => new Set());
@@ -463,6 +504,7 @@ export default function IssuesSection({
             <CandidateIssueCard
               key={key}
               proposal={proposal}
+              pendingReviews={reviewsByMergeGroup?.get(mergeGroupKey(proposal)) ?? 0}
               onOpenComparison={handleOpenComparison}
             />
           );
@@ -474,6 +516,7 @@ export default function IssuesSection({
             key={`${i.kind}-${i.id}`}
             issue={i}
             onClick={() => onOpenIssue?.(i)}
+            onDismissCopies={onDismissCopies}
           />
         ))}
 
