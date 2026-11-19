@@ -84,7 +84,8 @@
 
 .coalesce-field-col {
   width: 22%;
-  min-width: 140px;
+  min-width: 120px;
+  max-width: 140px;
 }
 
 .coalesce-field-name {
@@ -93,6 +94,7 @@
   color: #0f172a;
   display: block;
   margin-bottom: 4px;
+  white-space: normal;
 }
 
 .coalesce-required-asterisk {
@@ -212,8 +214,7 @@
   font-size: 13px;
   line-height: 1.45;
   color: #1e293b;
-  overflow-wrap: break-word;
-  word-break: normal;
+  white-space: normal;
 }
 
 .coalesce-selected-pill {
@@ -339,7 +340,7 @@
   padding: 12px 2px 2px;
 }
 
-.coalesce-matching-list > div {
+.coalesce-matching-list>div {
   display: grid;
   grid-template-columns: 16px minmax(120px, 0.45fr) minmax(0, 1fr);
   align-items: start;
@@ -372,7 +373,7 @@
     gap: 2px;
   }
 
-  .coalesce-matching-list > div {
+  .coalesce-matching-list>div {
     grid-template-columns: 16px minmax(90px, 0.4fr) minmax(0, 1fr);
   }
 
