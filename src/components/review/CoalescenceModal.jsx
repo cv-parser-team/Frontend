@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, TriangleAlert } from 'lucide-react';
 import FieldComparisonTable from './FieldComparisonTable';
 import {
   buildProposalFieldMatrix,
@@ -268,12 +268,38 @@ function CoalescenceModalContent({
   );
 }
 
+function AutoMergeNoticeModal({ proposal, onClose, onAcknowledgeAutoMerge }) {
+  const messages = proposal.mergeNotices
+    .flatMap((notice) => notice.messages ?? [])
+    .filter(Boolean);
+
+  return (
+    <div className="coalesce-modal" onClick={(event) => event.stopPropagation()}>
+      <header className="coalesce-modal-header">
+        <p className="coalesce-modal-eyebrow">Automatic duplicate merge</p>
+        <h2 className="coalesce-modal-title">We combined duplicate sources</h2>
+        <p className="coalesce-modal-subtitle">This profile entry is published and awaiting your acknowledgment.</p>
+        <button type="button" className="coalesce-modal-close" onClick={onClose} aria-label="Close merge details"><X size={20} /></button>
+      </header>
+      <div className="coalesce-modal-body">
+        <div className="coalesce-notice-banner"><TriangleAlert size={18} aria-hidden="true" /><span>{messages.join(' · ') || 'Combined duplicate sources'}</span></div>
+        <p className="coalesce-modal-instruction">Review the automatic merge, then acknowledge it to remove the profile warning.</p>
+      </div>
+      <footer className="coalesce-modal-footer"><div className="coalesce-footer-actions">
+        <button type="button" className="coalesce-different-btn" onClick={onClose}>Close</button>
+        <button type="button" className="coalesce-submit-btn" onClick={() => onAcknowledgeAutoMerge(proposal.claim)}>Acknowledge merge</button>
+      </div></footer>
+    </div>
+  );
+}
+
 export default function CoalescenceModal({
   isOpen,
   proposal,
   onClose,
   onResolve,
   onMarkDifferent,
+  onAcknowledgeAutoMerge,
 }) {
   if (!isOpen || !proposal) return null;
 
@@ -288,13 +314,11 @@ export default function CoalescenceModal({
       role="dialog"
       aria-modal="true"
     >
-      <CoalescenceModalContent
-        key={key}
-        proposal={proposal}
-        onClose={onClose}
-        onResolve={onResolve}
-        onMarkDifferent={onMarkDifferent}
-      />
+      {proposal.autoMergeNotice ? (
+        <AutoMergeNoticeModal proposal={proposal} onClose={onClose} onAcknowledgeAutoMerge={onAcknowledgeAutoMerge} />
+      ) : (
+        <CoalescenceModalContent key={key} proposal={proposal} onClose={onClose} onResolve={onResolve} onMarkDifferent={onMarkDifferent} />
+      )}
     </div>
   );
 }

@@ -10,11 +10,15 @@ import { infoText } from '../../../utils/helpers';
 // comparison instead of its own edit panel.
 function rowProps(type, x, onOpenItem, onOpenDuplicates) {
   const row = ROW[type](x);
+  const mergeProps = x.mergeNotices?.length
+    ? { mergeNotices: x.mergeNotices }
+    : {};
   if (!x.duplicates) {
-    return { ...row, onClick: () => onOpenItem(x.id) };
+    return { ...row, ...mergeProps, onClick: () => onOpenItem(x.id) };
   }
   return {
     ...row,
+    ...mergeProps,
     badge: <span className="bd amber">{x.duplicates.count} sources · Possible duplicate</span>,
     onClick: () => onOpenDuplicates(x.duplicates.group),
   };

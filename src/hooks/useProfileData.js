@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   createMyClaim,
   deleteMyClaim,
+  acknowledgeMyClaimAutoMerge,
   getMyCandidateProfile,
   getMyCandidateRecord,
   getMyClaims,
@@ -72,11 +73,10 @@ function sourceIdsFor(record, exportedClaim) {
 }
 
 // Fields shown with their canonical name when normalization linked them to a
-// dictionary term ("Pyton" is shown as "Python"). Job titles keep the
-// candidate's wording, because a canonical title can differ from their real
-// title ("Backend Engineer" and "Backend Developer").
+// dictionary term ("Pyton" is shown as "Python").
 const DISPLAYED_CANONICAL_FIELDS = {
   skill: { name: "name" },
+  employment: { jobTitle: "title" },
   education: { degree: "degree" },
 };
 
@@ -103,6 +103,9 @@ function mapClaim(record, exportedClaim) {
     _version: record.version,
     status: record.status,
     origin: record.origin,
+    mergeNotices: Array.isArray(record.openMergeNotices)
+      ? record.openMergeNotices
+      : [],
     sources: sourceIdsFor(record, exportedClaim),
     normalizedFrom,
   };
@@ -113,7 +116,7 @@ function mapClaim(record, exportedClaim) {
     case "employment":
       return {
         ...common,
-        title: values.jobTitle ?? "",
+        title: shown.title ?? values.jobTitle ?? "",
         employer: values.employer ?? "",
         start: values.startDate ?? "",
         end: values.endDate ?? "",
@@ -264,7 +267,7 @@ function mapData(candidate, claims, exportedProfile, documents, reviewItems) {
 
     const item = mapClaim(record, exportedById.get(record.claimId));
     if (!item) continue;
-    if (record.status === "accepted") {
+    if (record.status === "accepted" || record.status === "auto_accepted") {
       collections[key].push(item);
     } else if (record.status === "pending") {
       pendingClaims.push({ ...item, _collection: key });
@@ -488,6 +491,16 @@ export default function useProfileData() {
     }));
   };
 
+  const acknowledgeAutoMerge = async (key, id) => {
+    const item = d[key].find((record) => record.id === id);
+    if (!item) throw new Error("This profile entry is no longer available.");
+
+    await acknowledgeMyClaimAutoMerge(id, item._version);
+    // Acknowledgment can advance the server-side claim version. Reloading
+    // keeps the local copy, status, and notices consistent with that result.
+    await reload();
+  };
+
   const merge = async (key, changes) => {
     if (!candidate) throw new Error("The candidate profile has not loaded.");
 
@@ -545,5 +558,6 @@ export default function useProfileData() {
     resolveReviewItem,
     dismissReviewItem,
     reviewClaim,
+    acknowledgeAutoMerge,
   };
 }

@@ -14,9 +14,28 @@ import { COLL, F } from '../../../constants/config';
 import { patchFor, reviewOf } from '../../../utils/helpers';
 import { SOURCES } from '../../../data/profileData';
 
+function AutoMergeNotice({ item, onAcknowledge }) {
+  const notices = item?.mergeNotices ?? [];
+  if (notices.length === 0) return null;
+
+  const messages = notices.flatMap((notice) => notice.messages ?? []).filter(Boolean);
+  const mergedCount = new Set(
+    notices.flatMap((notice) => notice.supersededClaimIds ?? [])
+  ).size;
+
+  return (
+    <Callout tone="amber">
+      <b>Automatic merge:</b>{' '}
+      {messages.join(' · ') || 'Combined duplicate sources'}
+      {mergedCount > 0 && ` (${mergedCount} merged ${mergedCount === 1 ? 'claim' : 'claims'}).`}
+      <button className="lk" onClick={onAcknowledge}>Got it</button>
+    </Callout>
+  );
+}
+
 // A single state ({ type, id }) decides which drawer is open.
 export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
-  const { d, setD, upd, add, del, merge, resolveReviewItem, dismissReviewItem, reviewClaim } = store;
+  const { d, setD, upd, add, del, merge, resolveReviewItem, dismissReviewItem, reviewClaim, acknowledgeAutoMerge } = store;
   if (!dr) return null;
   const { type, id } = dr;
   const pr = d.profile;
@@ -35,9 +54,17 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
               <button className="lk" onClick={() => setDr({ type: rv[0], id })}>Resolve issue</button>
             </Callout>
           )}
-          <NormalizedCallout original={item?.normalizedFrom?.degree} shown={item?.degree} />
+          <NormalizedCallout
+            original={item?.normalizedFrom?.title ?? item?.normalizedFrom?.degree}
+            shown={item?.title ?? item?.degree}
+          />
+          <AutoMergeNotice item={item} onAcknowledge={async () => {
+            await acknowledgeAutoMerge(c.key, id);
+            close();
+          }} />
         </>}
         rows={F[type]} init={item || {}} item={item} onClose={close} onViewSource={goSources}
+        ok={item?.normalizedFrom?.title || item?.normalizedFrom?.degree ? 'Got it' : undefined}
         onSave={async (v) => {
           if (item) await upd(c.key, id, patchFor(type, item, v));
           else await add(c.key, v);
@@ -109,8 +136,15 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
       const skill = d.skills.find((x) => x.id === id);
       if (!skill) return null;
       return <EditDrawer key={id} title="Edit skill" sub={skill.name} rows={F.skill} init={skill}
-        note={<NormalizedCallout original={skill.normalizedFrom?.name} shown={skill.name} />}
-        onClose={close} onSave={async (values) => { await upd('skills', id, values); close(); }}
+        note={<>
+          <NormalizedCallout original={skill.normalizedFrom?.name} shown={skill.name} />
+          <AutoMergeNotice item={skill} onAcknowledge={async () => {
+            await acknowledgeAutoMerge('skills', id);
+            close();
+          }} />
+        </>}
+        onClose={close} ok={skill.normalizedFrom?.name ? 'Got it' : undefined}
+        onSave={async (values) => { await upd('skills', id, values); close(); }}
         onDelete={async () => {
           if (window.confirm('Delete this skill from your profile?')) {
             await del('skills', id);

@@ -5,7 +5,7 @@ import FieldInput from './FieldInput';
 import SourceList from '../ui/SourceList';
 
 // Generic edit drawer (profile, summary, experience, project, education, certification)
-export default function EditDrawer({ title, sub, badge, note, rows, init = {}, item, onSave, onDelete, onClose, onViewSource }) {
+export default function EditDrawer({ title, sub, badge, note, rows, init = {}, item, onSave, onDelete, onClose, onViewSource, ok }) {
   const flat = rows.flat();
   const [v, setV] = useState(() => Object.fromEntries(flat.map(([k, , t]) =>
     [k, t === 'list' ? (init[k] || []).join(', ') : t === 'check' ? !!init[k] : init[k] ?? ''])));
@@ -41,7 +41,7 @@ export default function EditDrawer({ title, sub, badge, note, rows, init = {}, i
   return (
     <Drawer title={title} sub={sub} badge={badge} onClose={onClose}
       footer={<DrawerFooter onCancel={onClose} onOk={save} disabled={!valid || saving}
-        ok={saving ? 'Saving…' : undefined}
+        ok={saving ? 'Saving…' : ok}
         left={onDelete && <button className="btn danger" disabled={saving} onClick={remove}>Delete</button>} />}>
       {note}
       {error && <p className="err" role="alert">{error}</p>}

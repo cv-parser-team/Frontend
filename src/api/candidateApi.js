@@ -108,6 +108,29 @@ export async function deleteMyClaim(claimId, version) {
   );
 }
 
+export async function acknowledgeMyClaimAutoMerge(claimId, version) {
+  const response = await apiRequest(
+    `/api/candidates/me/claims/${encodeURIComponent(claimId)}/acknowledge-auto-merge`,
+    {
+      method: "POST",
+      ...(Number.isInteger(version)
+        ? { headers: { "If-Match": `"${version}"` } }
+        : {}),
+      body: JSON.stringify({}),
+    },
+  );
+
+  if (
+    !response?.data ||
+    typeof response.data.acknowledged !== "number" ||
+    typeof response.data.status !== "string"
+  ) {
+    throw new Error("Unexpected response while acknowledging the automatic merge.");
+  }
+
+  return response.data;
+}
+
 export async function getMyCandidateProfile() {
   const response = await apiRequest(
     "/api/candidates/me/profile",
