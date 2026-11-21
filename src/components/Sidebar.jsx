@@ -23,7 +23,6 @@ const navigationItems = [
     label: "Profile",
     path: "/profile",
     icon: UserRound,
-    count: 248,
   },
   {
     label: "Import & Upload",

@@ -12,7 +12,6 @@ import {
   extractRawValue,
   getProposalPairKeys,
   groupMergeProposals,
-  SAMPLE_SCALE_AI_PROPOSAL,
 } from '../../../utils/coalesceUtils';
 import { mergeGroupKey } from '../../../utils/duplicateGroups';
 import './IssuesSection.css';
@@ -322,6 +321,7 @@ export default function IssuesSection({
   );
   const setSelectedProposal = onSelectedProposalChange ?? setInternalSelectedProposal;
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categoryCounts = useMemo(() => {
@@ -359,6 +359,7 @@ export default function IssuesSection({
   const loadCandidates = useCallback(
     async (currentResolvedKeys = resolvedPairKeys) => {
       setIsLoading(true);
+      setLoadError(false);
       try {
         const candidates = await getMyClaimMergeCandidates();
         if (Array.isArray(candidates) && candidates.length > 0) {
@@ -375,13 +376,10 @@ export default function IssuesSection({
           onMergeCandidatesChange?.([]);
         }
       } catch {
-        // On connection error or offline fallback, provide sample proposal unless already resolved
-        const sampleKey = getProposalPairKeys(SAMPLE_SCALE_AI_PROPOSAL)[0];
-        const filtered = currentResolvedKeys.has(sampleKey)
-          ? []
-          : [SAMPLE_SCALE_AI_PROPOSAL];
-        setInternalCandidates(filtered);
-        onMergeCandidatesChange?.(filtered);
+        // Show nothing invented: keep the list empty and offer a retry.
+        setLoadError(true);
+        setInternalCandidates([]);
+        onMergeCandidatesChange?.([]);
       } finally {
         setIsLoading(false);
       }
@@ -408,39 +406,26 @@ export default function IssuesSection({
     if (onResolveProposal) {
       await onResolveProposal(batchAction);
     } else {
-      try {
-        const results = await resolveMyClaimBatch([batchAction]);
-        const firstResult = results?.[0];
-        if (firstResult && firstResult.status === 'conflict') {
-          const conflictErr = new Error(
-            'Version conflict: this claim was updated in another session. Please refresh your profile and try again.'
-          );
-          conflictErr.status = 409;
-          conflictErr.code = 'CONFLICT';
-          throw conflictErr;
-        }
-        if (firstResult && firstResult.status === 'not_eligible') {
-          throw new Error(
-            firstResult.reason ||
-              'This claim pair is no longer eligible for merging.'
-          );
-        }
-        if (firstResult && firstResult.status === 'failed') {
-          throw new Error(
-            firstResult.message || 'Failed to merge selected claims.'
-          );
-        }
-      } catch (err) {
-        // If simulated sample proposal in offline/test environment, permit local merge
-        const actionClaimIds =
-          batchAction.action === 'merge_claim_group'
-            ? batchAction.claims.map(({ claimId }) => claimId)
-            : [batchAction.leftClaimId, batchAction.rightClaimId];
-        if (actionClaimIds.includes(SAMPLE_SCALE_AI_PROPOSAL.left?.claimId)) {
-          console.info('Simulated merge applied for sample proposal:', batchAction);
-        } else {
-          throw err;
-        }
+      const results = await resolveMyClaimBatch([batchAction]);
+      const firstResult = results?.[0];
+      if (firstResult && firstResult.status === 'conflict') {
+        const conflictErr = new Error(
+          'Version conflict: this claim was updated in another session. Please refresh your profile and try again.'
+        );
+        conflictErr.status = 409;
+        conflictErr.code = 'CONFLICT';
+        throw conflictErr;
+      }
+      if (firstResult && firstResult.status === 'not_eligible') {
+        throw new Error(
+          firstResult.reason ||
+            'This claim pair is no longer eligible for merging.'
+        );
+      }
+      if (firstResult && firstResult.status === 'failed') {
+        throw new Error(
+          firstResult.message || 'Failed to merge selected claims.'
+        );
       }
     }
 
@@ -476,15 +461,7 @@ export default function IssuesSection({
       if (onMarkDifferentProposal) {
         await onMarkDifferentProposal(leftClaimId, rightClaimId);
       } else {
-        try {
-          await markMyClaimsDifferent(leftClaim, rightClaim);
-        } catch (err) {
-          if (leftClaimId === SAMPLE_SCALE_AI_PROPOSAL.left?.claimId) {
-            console.info('Simulated mark-different applied for sample proposal');
-          } else {
-            throw err;
-          }
-        }
+        await markMyClaimsDifferent(leftClaim, rightClaim);
       }
     }
 
@@ -541,6 +518,15 @@ export default function IssuesSection({
 
           {isLoading && mergeCandidates.length === 0 && (
             <p className="candidate-loading">Loading candidate issues...</p>
+          )}
+
+          {loadError && !isLoading && (
+            <p className="candidate-loading" role="alert">
+              Possible duplicates could not be loaded.{' '}
+              <button type="button" className="candidate-retry" onClick={() => loadCandidates()}>
+                Try again
+              </button>
+            </p>
           )}
 
         {/* Merge candidate proposals */}
