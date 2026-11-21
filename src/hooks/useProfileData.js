@@ -3,6 +3,7 @@ import {
   createMyClaim,
   deleteMyClaim,
   acknowledgeMyClaimAutoMerge,
+  keepMyClaimAutoMergeSeparate,
   getMyCandidateProfile,
   getMyCandidateRecord,
   getMyClaims,
@@ -501,6 +502,14 @@ export default function useProfileData() {
     await reload();
   };
 
+  const keepAutoMergeSeparate = async (key, id) => {
+    const item = d[key].find((record) => record.id === id);
+    if (!item) throw new Error("This profile entry is no longer available.");
+
+    await keepMyClaimAutoMergeSeparate(id, item._version);
+    await reload();
+  };
+
   const merge = async (key, changes) => {
     if (!candidate) throw new Error("The candidate profile has not loaded.");
 
@@ -559,5 +568,6 @@ export default function useProfileData() {
     dismissReviewItem,
     reviewClaim,
     acknowledgeAutoMerge,
+    keepAutoMergeSeparate,
   };
 }

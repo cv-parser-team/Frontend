@@ -44,6 +44,17 @@ export async function getMyClaims(status) {
   return response.data;
 }
 
+export async function getMyClaim(claimId) {
+  const response = await apiRequest(
+    `/api/candidates/me/claims/${encodeURIComponent(claimId)}`
+  );
+
+  if (response?.data?.claimId !== claimId) {
+    throw new Error("Unexpected response while loading the claim.");
+  }
+  return response.data;
+}
+
 export async function createMyClaim(claimType, values) {
   const response = await apiRequest("/api/candidates/me/claims", {
     method: "POST",
@@ -128,6 +139,24 @@ export async function acknowledgeMyClaimAutoMerge(claimId, version) {
     throw new Error("Unexpected response while acknowledging the automatic merge.");
   }
 
+  return response.data;
+}
+
+export async function keepMyClaimAutoMergeSeparate(claimId, version) {
+  const response = await apiRequest(
+    `/api/candidates/me/claims/${encodeURIComponent(claimId)}/keep-auto-merge-separate`,
+    {
+      method: "POST",
+      ...(Number.isInteger(version)
+        ? { headers: { "If-Match": `"${version}"` } }
+        : {}),
+      body: JSON.stringify({}),
+    },
+  );
+
+  if (!Array.isArray(response?.data?.claims)) {
+    throw new Error("Unexpected response while restoring the separate claims.");
+  }
   return response.data;
 }
 

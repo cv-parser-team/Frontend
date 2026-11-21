@@ -34,6 +34,17 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
   const mergeGroups = useMemo(() => groupMergeProposals(mergeCandidates), [mergeCandidates]);
   const groupByClaim = useMemo(() => indexGroupsByClaim(mergeGroups), [mergeGroups]);
   const candidateIssuesCount = mergeGroups.length;
+  const claimItemsById = useMemo(() => new Map(
+    [
+      ...d.skills,
+      ...d.experience,
+      ...d.education,
+      ...d.projects,
+      ...d.certifications,
+      ...d.languages,
+      ...d.pendingClaims,
+    ].map((item) => [item.id, item])
+  ), [d]);
 
   // Issues are derived from the data, never stored — badges, red dots and counts can't drift apart.
   // A pending claim that is one of several suspected copies is resolved by
@@ -152,6 +163,7 @@ export default function ProfilePage({ sourcesPath = '/sources', onNavigate = (p)
               reviewsByMergeGroup={reviewsByMergeGroup}
               onDismissCopies={(issue) => runMutation(() => dismissCopies(issue))}
               onMergeCandidatesChange={setMergeCandidates}
+              claimItemsById={claimItemsById}
               selectedProposal={comparison} onSelectedProposalChange={setComparison}
               onRefreshProfile={reload} />
           )}

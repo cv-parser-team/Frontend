@@ -10,32 +10,14 @@ import TextFixDrawer from './TextFixDrawer';
 import PhoneDrawer from './PhoneDrawer';
 import ExtractionReviewDrawer from './ExtractionReviewDrawer';
 import ClaimReviewDrawer from './ClaimReviewDrawer';
+import AutoMergeReviewDrawer from './AutoMergeReviewDrawer';
 import { COLL, F } from '../../../constants/config';
 import { patchFor, reviewOf } from '../../../utils/helpers';
 import { SOURCES } from '../../../data/profileData';
 
-function AutoMergeNotice({ item, onAcknowledge }) {
-  const notices = item?.mergeNotices ?? [];
-  if (notices.length === 0) return null;
-
-  const messages = notices.flatMap((notice) => notice.messages ?? []).filter(Boolean);
-  const mergedCount = new Set(
-    notices.flatMap((notice) => notice.supersededClaimIds ?? [])
-  ).size;
-
-  return (
-    <Callout tone="amber">
-      <b>Automatic merge:</b>{' '}
-      {messages.join(' · ') || 'Combined duplicate sources'}
-      {mergedCount > 0 && ` (${mergedCount} merged ${mergedCount === 1 ? 'claim' : 'claims'}).`}
-      <button className="lk" onClick={onAcknowledge}>Got it</button>
-    </Callout>
-  );
-}
-
 // A single state ({ type, id }) decides which drawer is open.
 export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
-  const { d, setD, upd, add, del, merge, resolveReviewItem, dismissReviewItem, reviewClaim, acknowledgeAutoMerge } = store;
+  const { d, setD, upd, add, del, merge, resolveReviewItem, dismissReviewItem, reviewClaim, acknowledgeAutoMerge, keepAutoMergeSeparate } = store;
   if (!dr) return null;
   const { type, id } = dr;
   const pr = d.profile;
@@ -44,6 +26,21 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
   if (c) {
     const item = id === 'new' ? null : d[c.key].find((x) => x.id === id);
     if (id !== 'new' && !item) return null;
+    if (item?.mergeNotices?.length > 0) {
+      return <AutoMergeReviewDrawer
+        key={`auto-merge-${id}`}
+        item={item}
+        onClose={close}
+        onConfirm={async () => {
+          await acknowledgeAutoMerge(c.key, id);
+          close();
+        }}
+        onKeepSeparate={async () => {
+          await keepAutoMergeSeparate(c.key, id);
+          close();
+        }}
+      />;
+    }
     const rv = reviewOf(type, item);
     return (
       <EditDrawer key={`${type}-${id}`} title={`${item ? 'Edit' : 'Add'} ${c.noun}`} sub={item && c.sub(item)}
@@ -58,10 +55,6 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
             original={item?.normalizedFrom?.title ?? item?.normalizedFrom?.degree}
             shown={item?.title ?? item?.degree}
           />
-          <AutoMergeNotice item={item} onAcknowledge={async () => {
-            await acknowledgeAutoMerge(c.key, id);
-            close();
-          }} />
         </>}
         rows={F[type]} init={item || {}} item={item} onClose={close} onViewSource={goSources}
         ok={item?.normalizedFrom?.title || item?.normalizedFrom?.degree ? 'Got it' : undefined}
@@ -135,13 +128,24 @@ export default function ActiveDrawer({ dr, setDr, close, store, goSources }) {
     case 'skillEdit': {
       const skill = d.skills.find((x) => x.id === id);
       if (!skill) return null;
+      if (skill.mergeNotices?.length > 0) {
+        return <AutoMergeReviewDrawer
+          key={`auto-merge-${id}`}
+          item={skill}
+          onClose={close}
+          onConfirm={async () => {
+            await acknowledgeAutoMerge('skills', id);
+            close();
+          }}
+          onKeepSeparate={async () => {
+            await keepAutoMergeSeparate('skills', id);
+            close();
+          }}
+        />;
+      }
       return <EditDrawer key={id} title="Edit skill" sub={skill.name} rows={F.skill} init={skill}
         note={<>
           <NormalizedCallout original={skill.normalizedFrom?.name} shown={skill.name} />
-          <AutoMergeNotice item={skill} onAcknowledge={async () => {
-            await acknowledgeAutoMerge('skills', id);
-            close();
-          }} />
         </>}
         onClose={close} ok={skill.normalizedFrom?.name ? 'Got it' : undefined}
         onSave={async (values) => { await upd('skills', id, values); close(); }}

@@ -241,6 +241,23 @@
   .err { color: #b42318; font-size: 13px; }
   .dupc { display: grid; align-content: start; gap: 4px; padding: 11px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255, 255, 255, 0.7); font-size: 13px; }
   .dupc b { font-size: 14px; }
+  .auto-merge-explanation { display: flex; align-items: flex-start; gap: 8px; }
+  .auto-merge-explanation svg { flex: none; margin-top: 1px; }
+  .auto-merge-previews { display: grid; gap: 10px; }
+  .auto-merge-preview { padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255, 255, 255, 0.72); }
+  .auto-merge-preview-head { display: flex; align-items: flex-start; gap: 9px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .auto-merge-preview-head h3 { margin: 0; font-size: 13.5px; overflow-wrap: anywhere; }
+  .auto-merge-preview-head h3 + h3 { margin-top: 2px; }
+  .auto-merge-source-icon { display: grid; place-items: center; width: 29px; height: 29px; flex: none; border-radius: 8px; background: var(--soft); color: var(--pri); }
+  .auto-merge-fields { display: grid; gap: 7px; margin: 10px 0 0; }
+  .auto-merge-fields > div { display: grid; grid-template-columns: minmax(90px, 0.45fr) minmax(0, 1fr); gap: 10px; }
+  .auto-merge-fields dt { color: var(--mut); }
+  .auto-merge-fields dd { margin: 0; overflow-wrap: anywhere; }
+  .suspected-merge-choices { display: grid; gap: 12px; margin-top: 4px; }
+  .suspected-merge-choices h3 { margin: 0; font-size: 14px; }
+  .suspected-merge-choices p { margin: 3px 0 0; }
+  .suspected-merge-choices fieldset { display: grid; gap: 7px; margin: 0; padding: 0; border: 0; }
+  .suspected-merge-choices legend { margin-bottom: 6px; font-size: 13px; font-weight: 700; }
   .quote { display: grid; gap: 5px; margin: 0; padding: 10px 12px; border: 1px dashed #cbd2e1; border-radius: 10px; background: rgba(255, 255, 255, 0.6); font-size: 13px; }
   .quote small { display: inline-flex; align-items: center; gap: 5px; }
   .foot { margin-top: 22px; color: var(--mut); font-size: 12px; text-align: center; }

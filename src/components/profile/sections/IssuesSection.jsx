@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import Section from './Section';
-import CoalescenceModal from '../../review/CoalescenceModal';
+import SuspectedDuplicateDrawer from '../drawers/SuspectedDuplicateDrawer';
+import { SOURCES } from '../../../data/profileData';
 import {
   getMyClaimMergeCandidates,
   resolveMyClaimBatch,
@@ -37,6 +38,43 @@ function getIssueCategory(issue) {
 
 function getProposalIssueCategory(proposal) {
   return proposal.requiresCandidateChoice ? 'conflict' : 'duplicate';
+}
+
+function enrichClaimSource(claim, claimItemsById) {
+  const item = claimItemsById?.get(claim?.claimId);
+  const documentNames = (item?.sources ?? [])
+    .map((sourceId) => SOURCES[sourceId]?.label)
+    .filter(Boolean);
+  return {
+    ...claim,
+    ...(documentNames.length > 0
+      ? {
+          documentNames: [...new Set(documentNames)],
+          documentName: documentNames[0],
+        }
+      : {}),
+  };
+}
+
+function enrichProposalSources(proposal, claimItemsById) {
+  if (!proposal) return proposal;
+  return {
+    ...proposal,
+    left: enrichClaimSource(proposal.left, claimItemsById),
+    right: enrichClaimSource(proposal.right, claimItemsById),
+    ...(Array.isArray(proposal.claims)
+      ? { claims: proposal.claims.map((claim) => enrichClaimSource(claim, claimItemsById)) }
+      : {}),
+    ...(Array.isArray(proposal.proposals)
+      ? {
+          proposals: proposal.proposals.map((pair) => ({
+            ...pair,
+            left: enrichClaimSource(pair.left, claimItemsById),
+            right: enrichClaimSource(pair.right, claimItemsById),
+          })),
+        }
+      : {}),
+  };
 }
 
 function getProposalCategory(proposal) {
@@ -263,6 +301,7 @@ export default function IssuesSection({
   // Review items each merge group card stands for, by merge group key.
   reviewsByMergeGroup,
   onDismissCopies,
+  claimItemsById,
 }) {
   const [internalCandidates, setInternalCandidates] = useState([]);
   const [resolvedPairKeys, setResolvedPairKeys] = useState(() => new Set());
@@ -277,6 +316,10 @@ export default function IssuesSection({
     controlledSelectedProposal !== undefined
       ? controlledSelectedProposal
       : internalSelectedProposal;
+  const enrichedSelectedProposal = useMemo(
+    () => enrichProposalSources(selectedProposal, claimItemsById),
+    [selectedProposal, claimItemsById]
+  );
   const setSelectedProposal = onSelectedProposalChange ?? setInternalSelectedProposal;
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -421,36 +464,39 @@ export default function IssuesSection({
     }
   };
 
-  const handleMarkDifferent = async (leftClaim, rightClaim) => {
-    const leftClaimId = leftClaim?.claimId;
-    const rightClaimId = rightClaim?.claimId;
-    if (onMarkDifferentProposal) {
-      await onMarkDifferentProposal(leftClaimId, rightClaimId);
-    } else {
-      try {
-        await markMyClaimsDifferent(leftClaim, rightClaim);
-      } catch (err) {
-        if (leftClaimId === SAMPLE_SCALE_AI_PROPOSAL.left?.claimId) {
-          console.info('Simulated mark-different applied for sample proposal');
-        } else {
-          throw err;
+  const handleKeepSeparate = async () => {
+    const proposals = selectedProposal?.isGroup
+      ? selectedProposal.proposals ?? []
+      : [selectedProposal];
+    for (const proposal of proposals) {
+      const leftClaim = proposal?.left;
+      const rightClaim = proposal?.right;
+      const leftClaimId = leftClaim?.claimId;
+      const rightClaimId = rightClaim?.claimId;
+      if (onMarkDifferentProposal) {
+        await onMarkDifferentProposal(leftClaimId, rightClaimId);
+      } else {
+        try {
+          await markMyClaimsDifferent(leftClaim, rightClaim);
+        } catch (err) {
+          if (leftClaimId === SAMPLE_SCALE_AI_PROPOSAL.left?.claimId) {
+            console.info('Simulated mark-different applied for sample proposal');
+          } else {
+            throw err;
+          }
         }
       }
     }
 
-    const pairKey = [leftClaimId, rightClaimId].sort().join(':');
     const nextResolvedKeys = new Set(resolvedPairKeys);
-    nextResolvedKeys.add(pairKey);
+    getProposalPairKeys(selectedProposal).forEach((key) => nextResolvedKeys.add(key));
     setResolvedPairKeys(nextResolvedKeys);
 
     setSelectedProposal(null);
     setInternalCandidates((prev) =>
       prev.filter(
-        (p) =>
-          !(
-            p.left?.claimId === leftClaimId &&
-            p.right?.claimId === rightClaimId
-          )
+        (proposal) =>
+          !getProposalPairKeys(proposal).some((key) => nextResolvedKeys.has(key))
       )
     );
 
@@ -500,10 +546,11 @@ export default function IssuesSection({
         {/* Merge candidate proposals */}
         {visibleCandidates.map((proposal, idx) => {
           const key = `merge-${proposal.groupKey || getProposalPairKeys(proposal)[0] || idx}`;
+          const displayProposal = enrichProposalSources(proposal, claimItemsById);
           return (
             <CandidateIssueCard
               key={key}
-              proposal={proposal}
+              proposal={displayProposal}
               pendingReviews={reviewsByMergeGroup?.get(mergeGroupKey(proposal)) ?? 0}
               onOpenComparison={handleOpenComparison}
             />
@@ -532,14 +579,13 @@ export default function IssuesSection({
         </div>
       </Section>
 
-      {/* Coalescence Comparison Modal */}
-      <CoalescenceModal
-        isOpen={!!selectedProposal}
-        proposal={selectedProposal}
+      {enrichedSelectedProposal && <SuspectedDuplicateDrawer
+        key={enrichedSelectedProposal.groupKey || getProposalPairKeys(enrichedSelectedProposal)[0]}
+        proposal={enrichedSelectedProposal}
         onClose={handleCloseComparison}
         onResolve={handleResolve}
-        onMarkDifferent={handleMarkDifferent}
-      />
+        onKeepSeparate={handleKeepSeparate}
+      />}
     </>
   );
 }
