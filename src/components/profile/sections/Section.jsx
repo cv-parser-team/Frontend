@@ -1,10 +1,10 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { TABS } from '../../../constants/config';
+import { ISSUE_TAB, TABS } from '../../../constants/config';
 import { cx } from '../../../utils/helpers';
 
 // Collapsible card. The right side (actions) lives outside the toggle button so "+" / edit never collapse it.
 export default function Section({ id, count, open, onToggle, actions, children }) {
-  const [, title, Icon] = TABS.find(([t]) => t === id);
+  const [, title, Icon] = id === 'issues' ? ISSUE_TAB : TABS.find(([t]) => t === id);
   const tone = id === 'issues' ? 'warn' : '';
   return (
     <section id={`sec-${id}`} className={cx('card sec', !open && 'shut')}>

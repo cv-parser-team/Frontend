@@ -2,11 +2,13 @@ import { AlertTriangle, Award, Briefcase, Code2, FileText, GraduationCap, Langua
 
 // [id, label, icon] — drives the section nav bar and the section cards
 export const TABS = [
-  ['issues', 'Issues', AlertTriangle], ['summary', 'Professional Summary', FileText], ['skills', 'Skills', Code2],
+  ['summary', 'Professional Summary', FileText], ['skills', 'Skills', Code2],
   ['exp', 'Work Experience', Briefcase], ['edu', 'Education', GraduationCap], ['proj', 'Projects', Rocket],
   ['cert', 'Certifications', Award],
   ['languages', 'Languages', Languages],
 ];
+
+export const ISSUE_TAB = ['issues', 'Issues', AlertTriangle];
 
 // issue kind -> [label, badge tone]
 export const KIND = {

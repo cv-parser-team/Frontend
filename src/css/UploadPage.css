@@ -12,7 +12,7 @@
 :root {
   font-family: "Inter", Arial, sans-serif;
   color: #172344;
-  background: #f5f6fa;
+  background: linear-gradient(180deg, #e3ebf8, #f4f6fb 560px);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 
@@ -37,7 +37,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--background);
+  background: linear-gradient(180deg, #e3ebf8, #f4f6fb 560px);
   font-family: "Inter", Arial, sans-serif;
   font-size: 13px;
   color: var(--text);
@@ -64,6 +64,7 @@ input:focus-visible {
 
 #root {
   min-height: 100vh;
+   background: linear-gradient(180deg, #e3ebf8, #f4f6fb 560px);
 }
 
 /* =========================================
@@ -74,69 +75,14 @@ input:focus-visible {
   width: 100%;
   min-height: 100vh;
   padding: 0;
+ 
 }
 
 .page-container {
   width: 100%;
   max-width: 1600px;
-  margin: 0 auto;
+  margin: 20px 20px auto;
   padding: 14px 19px 18px;
-}
-
-/* =========================================
-   HEADER
-========================================= */
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 22px;
-  margin-bottom: 14px;
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #758096;
-  font-size: 13px;
-}
-
-.breadcrumb strong {
-  color: #5f6b80;
-  font-weight: 400;
-}
-
-.account-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.notification,
-.account {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px;
-  border: 0;
-  background: transparent;
-  color: #687386;
-  font-size: 12px;
-}
-
-.notification:hover,
-.account:hover {
-  color: var(--primary);
-}
-
-.notification svg {
-  color: #d6a400;
-}
-
-.account {
-  gap: 5px;
 }
 
 /* =========================================
@@ -807,8 +753,12 @@ input:focus-visible {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   white-space: nowrap;
+}
+
+.source-actions.menu-open {
+  z-index: 30;
 }
 
 .source-primary {
@@ -831,44 +781,57 @@ input:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 23px;
-  height: 25px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: 0;
-  background: transparent;
+  border: 1px solid #e1e5ed;
+  border-radius: 8px;
+  background: #ffffff;
   color: #657084;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .more-button:hover {
+  border-color: #c9c5ff;
+  background: #f4f3ff;
   color: var(--primary);
 }
 
 .action-menu {
   position: absolute;
-  z-index: 20;
-  top: calc(100% + 4px);
+  z-index: 31;
+  top: calc(100% + 6px);
   right: 0;
   display: flex;
   flex-direction: column;
-  min-width: 175px;
-  padding: 5px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid #e2e6ee;
+  border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 5px 18px rgba(20, 33, 62, 0.12);
+  box-shadow: 0 12px 28px rgba(20, 33, 62, 0.18);
 }
 
 .action-menu button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 9px;
+  min-height: 36px;
+  padding: 8px 10px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: transparent;
   color: #344054;
-  font-size: 11px;
+  font-size: 12px;
   text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.action-menu button svg {
+  flex: none;
 }
 
 .action-menu button:hover {
@@ -877,6 +840,9 @@ input:focus-visible {
 }
 
 .action-menu .danger-action {
+  margin-top: 4px;
+  border-top: 1px solid #f0f2f6;
+  border-radius: 0 0 7px 7px;
   color: #dc2626;
 }
 
@@ -992,6 +958,72 @@ input:focus-visible {
   background: #f1f2f6;
 }
 
+.delete-confirm-modal {
+  max-width: 420px;
+  padding-top: 30px;
+}
+
+.delete-confirm-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.delete-confirm-modal h2 {
+  margin-bottom: 8px;
+}
+
+.delete-confirm-modal > p {
+  margin-bottom: 22px;
+  overflow-wrap: anywhere;
+}
+
+.delete-confirm-modal > p strong {
+  color: #344054;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.delete-confirm-actions .button {
+  min-height: 37px;
+  padding: 0 13px;
+}
+
+.delete-cancel {
+  border-color: #dfe4ec;
+  background: #ffffff;
+  color: #536078;
+}
+
+.delete-cancel:hover:not(:disabled) {
+  background: #f5f7fb;
+}
+
+.delete-confirm-button {
+  border-color: #b42318;
+  background: #b42318;
+  color: #ffffff;
+}
+
+.delete-confirm-button:hover:not(:disabled) {
+  border-color: #912018;
+  background: #912018;
+}
+
+.delete-confirm-actions .button:disabled,
+.review-modal .modal-close:disabled {
+  cursor: wait;
+}
+
 .review-item {
   display: flex;
   align-items: center;
@@ -1042,14 +1074,6 @@ input:focus-visible {
 @media (max-width: 600px) {
   .page-container {
     padding: 10px;
-  }
-
-  .topbar {
-    margin-bottom: 17px;
-  }
-
-  .account-actions {
-    gap: 7px;
   }
 
   .page-intro h1 {

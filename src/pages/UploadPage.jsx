@@ -4,9 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "../css/UploadPage.css";
 
 import {
-  Bell,
-  ChevronDown,
-  CircleUserRound,
   UploadCloud,
   Check,
   AlertTriangle,
@@ -24,6 +21,7 @@ import {
   uploadDocument,
   getDocument,
   deleteDocument,
+  SOURCE_UPLOADED_EVENT,
 } from "../api/documentApi";
 
 // --------------------------------------------------
@@ -33,6 +31,8 @@ import {
 const ACCEPTED = ["pdf", "docx", "jpg", "jpeg", "png"];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const SOURCE_STATUS_REFRESH_INTERVAL_MS = 5000;
+const PROCESSING_SOURCE_STATUSES = new Set(["stored", "processing"]);
 
 // --------------------------------------------------
 // HELPERS
@@ -116,42 +116,6 @@ function normalizeDocument(document) {
           ? `Error: ${document.failureCode}`
           : "",
   };
-}
-
-// --------------------------------------------------
-// HEADER
-// --------------------------------------------------
-
-function Header() {
-  return (
-    <header className="topbar">
-      <div className="breadcrumb">
-        <span>Home</span>
-        <span>/</span>
-        <strong>Upload</strong>
-      </div>
-
-      <div className="account-actions">
-        <button
-          type="button"
-          className="notification"
-          aria-label="Notifications"
-        >
-          <Bell size={14} />
-        </button>
-
-        <button
-          type="button"
-          className="account"
-          aria-label="Candidate account"
-        >
-          <CircleUserRound size={19} />
-          <span>Candidate</span>
-          <ChevronDown size={11} />
-        </button>
-      </div>
-    </header>
-  );
 }
 
 // --------------------------------------------------
@@ -440,7 +404,7 @@ function StatusBadge({ status }) {
     Ready: ["pill-completed", <Check size={11} />],
     Processing: [
       "pill-processing",
-      <LoaderCircle size={11} />,
+      <LoaderCircle className="spin" size={11} />,
     ],
     Pending: ["pill-queued", <RefreshCw size={11} />],
     Queued: ["pill-queued", <RefreshCw size={11} />],
@@ -477,7 +441,7 @@ function SourceActions({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="source-actions">
+    <div className={`source-actions${open ? " menu-open" : ""}`}>
       <button
         type="button"
         className="button source-primary"
@@ -497,7 +461,7 @@ function SourceActions({
       </button>
 
       {open && (
-        <div className="action-menu">
+        <div className="action-menu" role="group" aria-label={`Actions for ${source.name}`}>
           <button
             type="button"
             onClick={() => {
@@ -728,12 +692,14 @@ function DocumentDetails({ document, onClose }) {
 
 export default function UploadPage() {
   const inputRef = useRef(null);
+  const statusRefreshInFlight = useRef(false);
 
   const [sources, setSources] = useState([]);
   const [queue, setQueue] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [sourceRefreshError, setSourceRefreshError] = useState("");
 
   const [progress, setProgress] = useState(0);
 
@@ -741,6 +707,7 @@ export default function UploadPage() {
   const [success, setSuccess] = useState("");
 
   const [deletingId, setDeletingId] = useState(null);
+  const [sourceToDelete, setSourceToDelete] = useState(null);
 
   const [selectedDocument, setSelectedDocument] =
     useState(null);
@@ -749,9 +716,11 @@ export default function UploadPage() {
   // LOAD SOURCES FROM BACKEND
   // ------------------------------------------------
 
-  const loadSources = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const loadSources = useCallback(async ({ background = false } = {}) => {
+    if (!background) {
+      setLoading(true);
+      setError("");
+    }
 
     try {
       const documents = await getDocuments();
@@ -761,16 +730,44 @@ export default function UploadPage() {
         .map(normalizeDocument);
 
       setSources(normalized);
+      setSourceRefreshError("");
     } catch (err) {
-      setError(err.message || "Failed to load documents.");
+      const message = err.message || "Failed to load documents.";
+      if (background) {
+        setSourceRefreshError(message);
+      } else {
+        setError(message);
+      }
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     loadSources();
   }, [loadSources]);
+
+  const hasProcessingSources = sources.some((source) =>
+    PROCESSING_SOURCE_STATUSES.has(source.rawStatus)
+  );
+  useEffect(() => {
+    if (!hasProcessingSources) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      if (
+        document.visibilityState !== "visible" ||
+        statusRefreshInFlight.current
+      ) {
+        return;
+      }
+
+      statusRefreshInFlight.current = true;
+      loadSources({ background: true }).finally(() => {
+        statusRefreshInFlight.current = false;
+      });
+    }, SOURCE_STATUS_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, [hasProcessingSources, loadSources]);
 
   // ------------------------------------------------
   // ADD FILES TO QUEUE
@@ -892,6 +889,9 @@ export default function UploadPage() {
 
     // Reload actual records from database.
     await loadSources();
+    if (successfulIds.length > 0) {
+      window.dispatchEvent(new Event(SOURCE_UPLOADED_EVENT));
+    }
 
     if (failures.length) {
       setError(
@@ -919,13 +919,14 @@ export default function UploadPage() {
   // DELETE DOCUMENT
   // ------------------------------------------------
 
-  const handleDelete = async (source) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${source.name}"?`
-    );
+  const requestDelete = (source) => {
+    setError("");
+    setSourceToDelete(source);
+  };
 
-    if (!confirmed) return;
-
+  const handleDelete = async () => {
+    if (!sourceToDelete || deletingId !== null) return;
+    const source = sourceToDelete;
     setDeletingId(source.id);
     setError("");
     setSuccess("");
@@ -946,6 +947,7 @@ export default function UploadPage() {
       );
     } finally {
       setDeletingId(null);
+      setSourceToDelete(null);
     }
   };
 
@@ -976,14 +978,22 @@ export default function UploadPage() {
   return (
     <main className="app-shell">
       <div className="page-container">
-        <Header />
-
         <PageIntro />
 
         {error && (
           <div className="api-message api-error" role="alert">
             <AlertTriangle size={15} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {sourceRefreshError && (
+          <div className="api-message api-error" role="alert">
+            <AlertTriangle size={15} />
+            <span>
+              Automatic status refresh failed: {sourceRefreshError}. Retrying
+              automatically.
+            </span>
           </div>
         )}
 
@@ -1014,7 +1024,7 @@ export default function UploadPage() {
         <SourceTable
           sources={sources}
           loading={loading}
-          onDelete={handleDelete}
+          onDelete={requestDelete}
           onView={handleView}
           deletingId={deletingId}
         />
@@ -1037,6 +1047,60 @@ export default function UploadPage() {
           document={selectedDocument}
           onClose={() => setSelectedDocument(null)}
         />
+      )}
+
+      {sourceToDelete && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && deletingId === null) {
+              setSourceToDelete(null);
+            }
+          }}
+        >
+          <section
+            className="review-modal delete-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-source-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Close confirmation"
+              disabled={deletingId !== null}
+              onClick={() => setSourceToDelete(null)}
+            >
+              <X size={18} />
+            </button>
+            <span className="delete-confirm-icon"><Trash2 size={19} /></span>
+            <h2 id="delete-source-title">Delete source?</h2>
+            <p>
+              Are you sure you want to delete <strong>{sourceToDelete.name}</strong>?
+              This action cannot be undone.
+            </p>
+            <div className="delete-confirm-actions">
+              <button
+                type="button"
+                className="button delete-cancel"
+                disabled={deletingId !== null}
+                onClick={() => setSourceToDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button delete-confirm-button"
+                disabled={deletingId !== null}
+                onClick={handleDelete}
+              >
+                <Trash2 size={14} />
+                {deletingId !== null ? "Deleting..." : "Delete source"}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </main>
   );

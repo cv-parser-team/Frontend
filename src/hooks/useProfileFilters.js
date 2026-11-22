@@ -2,35 +2,36 @@ import { useState } from 'react';
 import { TABS } from '../constants/config';
 import { isBadLink } from '../data/profileData';
 
-// search + "Needs review" filter. Returns the filtered lists for every section plus totals / flags.
-export default function useProfileFilters(d, issues) {
+// Search filtering for profile sections, with their counts and review flags.
+export default function useProfileFilters(d) {
   const [q, setQ] = useState('');
-  const [onlyReview, setOnlyReview] = useState(false);
 
   const qq = q.trim().toLowerCase();
-  const filtering = !!qq || onlyReview;
+  const filtering = !!qq;
   const hay = (x) => Object.entries(x).filter(([k]) => k !== 'id').flatMap(([, v]) => v).filter((v) => typeof v === 'string').join(' ').toLowerCase();
-  const hit = (x, review) => (!onlyReview || review) && (!qq || hay(x).includes(qq));
+  const hit = (x) => !qq || hay(x).includes(qq);
 
   const list = {
-    issues: issues.filter((i) => hit(i, true)),
-    summary: [d.summary].filter((s) => hit(s, s.cut)),
-    skills: d.skills.filter((s) => hit(s, s.low)),
-    exp: d.experience.filter((e) => hit(e, !!e.conflict)),
-    edu: d.education.filter((e) => hit(e, false)),
-    proj: d.projects.filter((p) => hit(p, isBadLink(p.link))),
-    cert: d.certifications.filter((c) => hit(c, !!c.dup)),
-    languages: d.languages.filter((language) => hit(language, false)),
+    summary: [d.summary].filter(hit),
+    skills: d.skills.filter(hit),
+    exp: d.experience.filter(hit),
+    edu: d.education.filter(hit),
+    proj: d.projects.filter(hit),
+    cert: d.certifications.filter(hit),
+    languages: d.languages.filter(hit),
   };
-  const total = { issues: issues.length, skills: d.skills.length, exp: d.experience.length, edu: d.education.length, proj: d.projects.length, cert: d.certifications.length, languages: d.languages.length };
+  const total = { skills: d.skills.length, exp: d.experience.length, edu: d.education.length, proj: d.projects.length, cert: d.certifications.length, languages: d.languages.length };
   const flagged = {
-    summary: d.summary.cut, skills: d.skills.some((s) => s.low), exp: d.experience.some((e) => e.conflict),
-    proj: d.projects.some((p) => isBadLink(p.link)), cert: d.certifications.some((c) => c.dup),
+    summary: d.summary.cut,
+    skills: d.skills.some((skill) => skill.low),
+    exp: d.experience.some((experience) => experience.conflict),
+    proj: d.projects.some((project) => isBadLink(project.link)),
+    cert: d.certifications.some((certification) => certification.dup),
   };
   const visible = (id) => !filtering || list[id].length > 0;
   const anyVisible = TABS.some(([id]) => visible(id));
 
-  const reset = () => { setQ(''); setOnlyReview(false); };
+  const reset = () => setQ('');
 
-  return { q, setQ, onlyReview, setOnlyReview, filtering, list, total, flagged, visible, anyVisible, reset };
+  return { q, setQ, filtering, list, total, flagged, visible, anyVisible, reset };
 }

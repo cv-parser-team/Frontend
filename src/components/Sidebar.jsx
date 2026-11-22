@@ -3,18 +3,17 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from '../assets/LuminaCV Logo Board.png';
 import {
-  Network,
   UserRound,
   Upload,
   Layers,
-  CircleCheck,
-  Clock,
+  AlertTriangle,
   SlidersHorizontal,
   Menu,
   X,
   LogOut,
 } from "lucide-react";
 import { logout } from "../api/authApi";
+import Modal from "./ui/Modal";
 
 import "./Sidebar.css";
 
@@ -28,6 +27,11 @@ const navigationItems = [
     label: "Import & Upload",
     path: "/upload",
     icon: Upload,
+  },
+  {
+    label: "Issues",
+    path: "/issues",
+    icon: AlertTriangle,
   },
   {
   label: "Sources",
@@ -44,12 +48,16 @@ const navigationItems = [
   },
 ];
 
-export default function Sidebar({ account }) {
+export default function Sidebar({ account, issueCount }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const navigate = useNavigate();
 
   const closeSidebar = () => setIsOpen(false);
-  const handleLogout = async () => {
+  const handleLogout = () => setShowLogoutConfirmation(true);
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
     let state;
     try {
       await logout();
@@ -107,6 +115,7 @@ export default function Sidebar({ account }) {
         <nav className="sidebar-navigation">
           {navigationItems.map((item) => {
             const Icon = item.icon;
+            const count = item.path === "/issues" ? issueCount : item.count;
 
             return (
               <NavLink
@@ -129,15 +138,13 @@ export default function Sidebar({ account }) {
                   {item.label}
                 </span>
 
-                {item.count !== undefined && (
+                {count !== undefined && (
                   <span
                     className={`sidebar-count ${
-                      item.label === "Review Center"
-                        ? "review-count"
-                        : ""
+                      item.path === "/issues" ? "issue-count" : ""
                     }`}
                   >
-                    {item.count}
+                    {count}
                   </span>
                 )}
               </NavLink>
@@ -159,12 +166,49 @@ export default function Sidebar({ account }) {
             </div>
           </NavLink>
 
-          <button className="sidebar-logout" type="button" onClick={handleLogout}>
+          <button
+            className="sidebar-logout"
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
             <LogOut size={15} strokeWidth={1.8} />
-            <span>Log out</span>
+            <span>{isLoggingOut ? "Logging out…" : "Log out"}</span>
           </button>
         </div>
       </aside>
+
+      {showLogoutConfirmation && (
+        <Modal
+          title="Log out?"
+          onClose={() => {
+            if (!isLoggingOut) setShowLogoutConfirmation(false);
+          }}
+        >
+          <p className="sidebar-logout-modal-message">
+            Are you sure you want to log out of your account?
+          </p>
+          <div className="sidebar-logout-modal-actions">
+            <button
+              className="sidebar-logout-cancel"
+              type="button"
+              onClick={() => setShowLogoutConfirmation(false)}
+              disabled={isLoggingOut}
+            >
+              Cancel
+            </button>
+            <button
+              className="sidebar-logout-confirm"
+              type="button"
+              onClick={confirmLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut size={15} strokeWidth={1.8} />
+              {isLoggingOut ? "Logging out…" : "Log out"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

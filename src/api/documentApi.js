@@ -6,6 +6,8 @@ import {
   refreshAccessToken,
 } from "./axiosClient";
 
+export const SOURCE_UPLOADED_EVENT = "lumina:source-uploaded";
+
 // --------------------------------------------------
 // GET DOCUMENTS
 // --------------------------------------------------

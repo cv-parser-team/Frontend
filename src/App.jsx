@@ -10,6 +10,7 @@ import { useEffect } from "react";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProfilePage from "./pages/ProfilePage";
+import IssuesPage from "./pages/IssuesPage";
 import UploadPage from "./pages/UploadPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -18,7 +19,7 @@ import ResourceDetailPage from "./pages/ResourceDetailPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import { SESSION_EXPIRED_EVENT } from "./api/axiosClient.js";
-
+import SplashPage from "./pages/SplashPage.jsx";
 function SessionExpiryRedirect() {
   const navigate = useNavigate();
 
@@ -43,6 +44,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/issues" element={<IssuesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/sources" element={<ResourcesPage />} />
@@ -50,6 +52,7 @@ export default function App() {
           </Route>
         </Route>
        <Route path="/login" element={<LoginPage />} />
+       <Route path="/" element={<SplashPage />} />
        <Route path="/signup" element={<SignUpPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

@@ -184,6 +184,19 @@
   font-size: 10px;
 }
 
+.issue-count {
+  min-width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: #fde5c2;
+  color: #8a4a07;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 /* ==============================
    USER PROFILE
 ================================= */
@@ -208,20 +221,92 @@
 }
 
 .sidebar-logout {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin: 9px 0 0 61px;
-  padding: 4px 0;
-  border: 0;
-  background: transparent;
-  color: #75829b;
+  justify-content: center;
+  gap: 9px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f1d8d8;
+  border-radius: 9px;
+  background: #fff8f8;
+  color: #a33b43;
   font-size: 12px;
+  font-weight: 650;
   cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .sidebar-logout:hover {
-  color: #5146f5;
+  border-color: #e7b6b8;
+  background: #fff0f0;
+  color: #8d242d;
+  transform: translateY(-1px);
+}
+
+.sidebar-logout:focus-visible {
+  outline: 2px solid #d15c63;
+  outline-offset: 2px;
+}
+
+.sidebar-logout:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+.sidebar-logout-modal-message {
+  margin-bottom: 20px;
+}
+
+.sidebar-logout-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.sidebar-logout-modal-actions button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid #dfe4ec;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sidebar-logout-cancel {
+  background: #fff;
+  color: #536078;
+}
+
+.sidebar-logout-cancel:hover {
+  background: #f5f7fb;
+}
+
+.sidebar-logout-confirm {
+  border-color: #a33b43 !important;
+  background: #a33b43;
+  color: #fff;
+}
+
+.sidebar-logout-confirm:hover {
+  border-color: #8d242d !important;
+  background: #8d242d;
+}
+
+.sidebar-logout-modal-actions button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .user-avatar {

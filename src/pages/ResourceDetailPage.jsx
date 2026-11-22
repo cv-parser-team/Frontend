@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Search, ChevronDown, ChevronRight, GraduationCap, BriefcaseBusiness, Code2, Award } from 'lucide-react'
-import { getMyClaims, updateMyClaim } from '../api/candidateApi'
+import { getMyClaims } from '../api/candidateApi'
 import { getDocument } from '../api/documentApi'
 import { getMyExtractionReviewItems } from '../api/extractionApi'
 import { ResourceBadge, ResourceStat, ResourceTypeIcon } from '../components/resources/ResourceUI'
-import ResourceDrawer from '../components/resources/ResourceDrawer'
 import '../css/resources.css'
 
 const claimGroups = [
@@ -24,17 +23,6 @@ const fieldOrder = {
   certification: ['title', 'issuer', 'issueDate', 'expiryDate', 'credentialId'],
   project: ['name', 'role', 'startDate', 'endDate', 'description', 'url', 'skills'],
 }
-
-const requiredFields = {
-  education: ['degree', 'institution', 'startDate'],
-  employment: ['employer', 'jobTitle', 'startDate'],
-  skill: ['name'],
-  language: ['name'],
-  certification: ['title', 'issuer', 'issueDate'],
-  project: ['name'],
-}
-
-const dateFields = new Set(['startDate', 'endDate', 'issueDate', 'expiryDate'])
 
 function formatSize(bytes) {
   if (!Number.isFinite(bytes)) return '—'
@@ -98,7 +86,6 @@ export default function ResourceDetailPage() {
   const [expanded, setExpanded] = useState(() =>
     Object.fromEntries(claimGroups.map(group => [group.id, true]))
   )
-  const [drawer, setDrawer] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -141,53 +128,6 @@ export default function ResourceDetailPage() {
       .filter(item => item.resolvedClaimId)
       .map(item => item.resolvedClaimId)
   ), [reviewItems])
-
-  const openField = (claim, field) => {
-    const value = claim.values[field]
-    setDrawer({
-      kind: 'field',
-      sourceName: document.originalFilename,
-      claim,
-      field,
-      item: {
-        label: formatLabel(field),
-        current: Array.isArray(value) ? value.join(', ') : formatValue(value),
-        extracted: formatValue(value),
-        required: requiredFields[claim.claimType]?.includes(field) || false,
-        multiline: field === 'description',
-        valueType: dateFields.has(field)
-          ? 'date'
-          : claim.claimType === 'language' && field === 'proficiency'
-            ? 'proficiency'
-            : 'text',
-      },
-    })
-  }
-
-  const saveField = async (record, update) => {
-    const values = { ...record.claim.values }
-    if (update.current.trim() === '') {
-      delete values[record.field]
-    } else if (Array.isArray(record.claim.values[record.field])) {
-      values[record.field] = update.current
-        .split(',')
-        .map(value => value.trim())
-        .filter(Boolean)
-    } else {
-      values[record.field] = update.current
-    }
-
-    const updatedClaim = await updateMyClaim(
-      record.claim.claimId,
-      record.claim.claimType,
-      values,
-      record.claim.version
-    )
-    setClaims(previous => previous.map(claim =>
-      claim.claimId === updatedClaim.claimId ? updatedClaim : claim
-    ))
-    setDrawer(null)
-  }
 
   if (loading) {
     return <main className="lumina-resource-page"><p role="status">Loading source details...</p></main>
@@ -233,7 +173,7 @@ export default function ResourceDetailPage() {
       <ResourceStat label="Rejected" value={stats.rejected} tone="red"/>
     </div>
     <section className="lumina-resource-panel lumina-resource-extracted">
-      <div className="lumina-resource-panel-head"><div><h2>Extracted information</h2><p>Grouped by profile section. Select any value to edit it.</p></div><span className="lumina-resource-count">{claims.length} claims</span></div>
+      <div className="lumina-resource-panel-head"><div><h2>Extracted information</h2><p>Read-only information extracted from this source, grouped by profile section.</p></div><span className="lumina-resource-count">{claims.length} claims</span></div>
       <div className="lumina-resource-toolbar detail">
         <label className="lumina-resource-search"><Search size={17}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search values..."/></label>
         <div className="lumina-resource-filter-chips">
@@ -271,15 +211,13 @@ export default function ResourceDetailPage() {
 
               return <article className="lumina-resource-claim-card" key={claim.claimId}>
                 <div className="lumina-resource-claim-heading">
-                  {primary && <button className="lumina-resource-claim-primary" aria-label={`Edit ${formatLabel(primary)}`} onClick={() => openField(claim, primary)}>{formatValue(claim.values[primary])}</button>}
+                  {primary && <strong className="lumina-resource-claim-primary">{formatValue(claim.values[primary])}</strong>}
                 </div>
                 <div className="lumina-resource-claim-values">
-                  {secondary.map(field => <button
+                  {secondary.map(field => <span
                     className={`lumina-resource-claim-value${field === 'description' ? ' description' : ''}`}
                     key={field}
-                    aria-label={`Edit ${formatLabel(field)}`}
-                    onClick={() => openField(claim, field)}
-                  >{formatValue(claim.values[field])}</button>)}
+                  >{formatValue(claim.values[field])}</span>)}
                 </div>
               </article>
             })}
@@ -297,6 +235,5 @@ export default function ResourceDetailPage() {
       })}
       {document.failureCode && <p className="lumina-resource-error">Processing issue: {document.failureCode}</p>}
     </section>
-    {drawer && <ResourceDrawer record={drawer} onClose={() => setDrawer(null)} onSave={update => saveField(drawer, update)}/>}
   </main>
 }
