@@ -1,0 +1,80 @@
+name: Deploy frontend to Amplify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luminacv-production-frontend
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Build production frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: npm run build
+
+      - name: Configure short-lived AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload and deploy release
+        env:
+          AMPLIFY_APP_ID: ${{ vars.AMPLIFY_APP_ID }}
+          AMPLIFY_BRANCH: ${{ vars.AMPLIFY_BRANCH }}
+        run: |
+          set -euo pipefail
+          (cd dist && zip -q -r ../release.zip .)
+
+          deployment=$(aws amplify create-deployment \
+            --app-id "$AMPLIFY_APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH")
+          job_id=$(jq -r '.jobId' <<<"$deployment")
+          upload_url=$(jq -r '.zipUploadUrl' <<<"$deployment")
+          curl --fail --silent --show-error \
+            --request PUT \
+            --header 'Content-Type: application/zip' \
+            --upload-file release.zip \
+            "$upload_url"
+
+          aws amplify start-deployment \
+            --app-id "$AMPLIFY_APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH" \
+            --job-id "$job_id" >/dev/null
+
+          for _ in {1..60}; do
+            status=$(aws amplify get-job \
+              --app-id "$AMPLIFY_APP_ID" \
+              --branch-name "$AMPLIFY_BRANCH" \
+              --job-id "$job_id" \
+              --query 'job.summary.status' \
+              --output text)
+            case "$status" in
+              SUCCEED) exit 0 ;;
+              FAILED|CANCELLED) echo "Amplify deployment ended with $status" >&2; exit 1 ;;
+            esac
+            sleep 10
+          done
+
+          echo "Timed out waiting for Amplify deployment $job_id" >&2
+          exit 1

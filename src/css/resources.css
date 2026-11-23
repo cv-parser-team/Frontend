@@ -1,0 +1,1321 @@
+.lumina-resource-page {
+    --lr-primary: #4f46e5;
+    --lr-ink: #172033;
+    --lr-muted: #687386;
+    --lr-border: #e6e9f0;
+    --lr-soft: #f7f8fc;
+    color: var(--lr-ink);
+    padding: 30px 34px 54px;
+    max-width: 1440px;
+    margin: 0 auto;
+    font-family: inherit;
+    background: linear-gradient(180deg, #e3ebf8, #f4f6fb 560px);
+}
+
+.lumina-resource-page * {
+    box-sizing: border-box
+}
+
+.lumina-resource-page h1 {
+    font-size: 29px;
+    line-height: 1.2;
+    margin: 4px 0 8px;
+    font-weight: 700;
+    letter-spacing: -.6px
+}
+
+.lumina-resource-page p {
+    margin-top: 0
+}
+
+.lumina-resource-page button,
+.lumina-resource-page input,
+.lumina-resource-page select,
+.lumina-resource-page textarea {
+    font: inherit
+}
+
+.lumina-resource-eyebrow {
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1.25px;
+    color: #8a93a4
+}
+
+.lumina-resource-page-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px
+}
+
+.lumina-resource-page-heading p,
+.lumina-resource-panel-head p {
+    font-size: 13px;
+    color: var(--lr-muted);
+    margin: 0
+}
+
+.lumina-resource-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--lr-border);
+    border-radius: 9px;
+    background: white;
+    color: var(--lr-ink);
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    white-space: nowrap
+}
+
+.lumina-resource-btn:hover {
+    background: #f8f9fc
+}
+
+.lumina-resource-btn.primary {
+    background: var(--lr-primary);
+    border-color: var(--lr-primary);
+    color: white
+}
+
+.lumina-resource-btn.primary:hover {
+    background: #4338ca
+}
+
+.lumina-resource-btn.danger {
+    color: #c43c45;
+    border-color: #f1cfd2
+}
+
+.lumina-resource-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+    margin-bottom: 22px
+}
+
+.lumina-resource-stat {
+    background: #fff;
+    border: 1px solid var(--lr-border);
+    border-radius: 13px;
+    padding: 15px 17px;
+    min-height: 83px
+}
+
+.lumina-resource-stat span {
+    display: block;
+    color: var(--lr-muted);
+    font-size: 11px;
+    margin-bottom: 8px
+}
+
+.lumina-resource-stat strong {
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -.4px
+}
+
+.lumina-resource-stat.green strong {
+    color: #16834b
+}
+
+.lumina-resource-stat.amber strong {
+    color: #c17a1a
+}
+
+.lumina-resource-stat.red strong {
+    color: #c43c45
+}
+
+.lumina-resource-panel {
+    background: #fff;
+    border: 1px solid var(--lr-border);
+    border-radius: 15px;
+    overflow: hidden
+}
+
+.lumina-resource-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 21px 15px
+}
+
+.lumina-resource-panel-head h2 {
+    font-size: 16px;
+    margin: 0 0 5px
+}
+
+.lumina-resource-count {
+    font-size: 11px;
+    color: var(--lr-muted);
+    background: var(--lr-soft);
+    padding: 6px 10px;
+    border-radius: 20px;
+    white-space: nowrap
+}
+
+.lumina-resource-toolbar {
+    display: flex;
+    gap: 10px;
+    padding: 0 21px 17px
+}
+
+.lumina-resource-search,
+.lumina-resource-select {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 39px;
+    border: 1px solid var(--lr-border);
+    border-radius: 9px;
+    padding: 0 11px;
+    color: #8992a2;
+    background: #fff
+}
+
+.lumina-resource-search {
+    width: min(390px, 100%)
+}
+
+.lumina-resource-search input {
+    border: 0;
+    outline: 0;
+    width: 100%;
+    min-width: 0;
+    color: var(--lr-ink);
+    font-size: 12px
+}
+
+.lumina-resource-select select {
+    border: 0;
+    outline: 0;
+    color: var(--lr-ink);
+    background: transparent;
+    font-size: 12px
+}
+
+.lumina-resource-table-wrap {
+    overflow-x: auto
+}
+
+.lumina-resource-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 720px;
+    text-align: left
+}
+
+.lumina-resource-table th {
+    height: 40px;
+    background: #fafbfe;
+    color: #8490a1;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .65px;
+    font-weight: 700;
+    padding: 0 16px;
+    border-top: 1px solid var(--lr-border);
+    border-bottom: 1px solid var(--lr-border)
+}
+
+.lumina-resource-table td {
+    height: 68px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #eff1f5;
+    font-size: 12px;
+    color: #586477
+}
+
+.lumina-resource-row {
+    cursor: pointer;
+    transition: background .15s
+}
+
+.lumina-resource-row:hover {
+    background: #fafbff
+}
+
+.lumina-resource-row>td:last-child {
+    color: #9aa3b1
+}
+
+.lumina-resource-name {
+    display: flex;
+    align-items: center;
+    gap: 11px
+}
+
+.lumina-resource-name strong {
+    display: block;
+    color: var(--lr-ink);
+    font-size: 12px;
+    font-weight: 650
+}
+
+.lumina-resource-name small {
+    display: block;
+    color: #98a1af;
+    font-size: 10px;
+    margin-top: 4px
+}
+
+.lumina-resource-field-count {
+    display: block;
+    color: #98a1af;
+    font-size: 10px;
+    margin-top: 4px
+}
+
+.lumina-resource-file-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 9px;
+    background: #f0f1ff;
+    color: var(--lr-primary);
+    display: grid;
+    place-items: center;
+    flex: none
+}
+
+.lumina-resource-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 650;
+    white-space: nowrap
+}
+
+.lumina-resource-badge.success {
+    background: #e8f7ee;
+    color: #16834b
+}
+
+.lumina-resource-badge.merged {
+    background: #eeedff;
+    color: #5b52c8
+}
+
+.lumina-resource-badge.warning {
+    background: #fff3df;
+    color: #b97818
+}
+
+.lumina-resource-badge.danger {
+    background: #ffeded;
+    color: #c43c45
+}
+
+.lumina-resource-badge.neutral {
+    background: #f0f2f6;
+    color: #687386
+}
+
+.lumina-resource-empty {
+    padding: 28px !important;
+    text-align: center;
+    color: #8791a1 !important
+}
+
+.lumina-resource-footnote {
+    font-size: 11px;
+    color: #9aa3b1;
+    margin: 13px 2px 0
+}
+
+.lumina-resource-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 0;
+    background: none;
+    color: var(--lr-primary);
+    font-size: 12px;
+    font-weight: 650;
+    padding: 0;
+    margin: 0 0 17px;
+    cursor: pointer
+}
+
+.lumina-resource-detail-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 19px 20px;
+    background: white;
+    border: 1px solid var(--lr-border);
+    border-radius: 14px;
+    margin-bottom: 15px
+}
+
+.lumina-resource-detail-title {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0
+}
+
+.lumina-resource-detail-title .lumina-resource-file-icon {
+    width: 43px;
+    height: 43px
+}
+
+.lumina-resource-detail-title h1 {
+    font-size: 20px;
+    margin: 3px 0 5px;
+    overflow-wrap: anywhere
+}
+
+.lumina-resource-detail-title p {
+    font-size: 11px;
+    color: var(--lr-muted);
+    margin: 0
+}
+
+.lumina-resource-actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap
+}
+
+.lumina-resource-stats.detail {
+    margin-bottom: 17px
+}
+
+.lumina-resource-jumps {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 15px
+}
+
+.lumina-resource-jumps button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--lr-border);
+    background: white;
+    border-radius: 9px;
+    padding: 8px 10px;
+    color: #566174;
+    font-size: 11px;
+    cursor: pointer
+}
+
+.lumina-resource-jumps button:hover {
+    border-color: #b9b5f4;
+    color: var(--lr-primary)
+}
+
+.lumina-resource-jumps small {
+    color: #929bad
+}
+
+.lumina-resource-extracted {
+    padding: 0 18px 12px
+}
+
+.lumina-resource-extracted>.lumina-resource-panel-head {
+    padding-left: 3px;
+    padding-right: 3px
+}
+
+.lumina-resource-toolbar.detail {
+    padding: 0 3px 15px;
+    align-items: center;
+    flex-wrap: wrap
+}
+
+.lumina-resource-filter-chips {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap
+}
+
+.lumina-resource-filter-chips button {
+    border: 1px solid var(--lr-border);
+    background: white;
+    border-radius: 20px;
+    padding: 7px 10px;
+    font-size: 10px;
+    color: #637084;
+    cursor: pointer
+}
+
+.lumina-resource-filter-chips button.active {
+    background: #eeedff;
+    color: var(--lr-primary);
+    border-color: #d8d5ff
+}
+
+.lumina-resource-expand {
+    border: 0;
+    background: none;
+    color: var(--lr-primary);
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    margin-left: auto
+}
+
+.lumina-resource-accordion {
+    border: 1px solid var(--lr-border);
+    border-radius: 11px;
+    margin-bottom: 9px;
+    overflow: hidden;
+    scroll-margin-top: 15px
+}
+
+.lumina-resource-accordion-head {
+    width: 100%;
+    min-height: 53px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: #fff;
+    text-align: left;
+    color: #566174;
+    cursor: pointer
+}
+
+.lumina-resource-accordion-head>strong {
+    color: var(--lr-ink);
+    font-size: 12px
+}
+
+.lumina-resource-accordion-head>span:not(.lumina-resource-badge) {
+    margin-left: auto;
+    color: #929bad;
+    font-size: 10px
+}
+
+.lumina-resource-accordion-head>.lumina-resource-badge {
+    margin-left: 0
+}
+
+.lumina-resource-accordion-body {
+    padding: 0 12px 7px
+}
+
+.lumina-resource-claim-card {
+    padding: 14px 8px;
+    border-top: 1px solid #f0f2f6
+}
+
+.lumina-resource-claim-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px
+}
+
+.lumina-resource-claim-primary {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--lr-ink);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: default
+}
+
+.lumina-resource-claim-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 9px
+}
+
+.lumina-resource-claim-value {
+    max-width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    background: #fff;
+    color: #566174;
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: default
+}
+
+.lumina-resource-claim-value.description {
+    width: 100%;
+    line-height: 1.55;
+    white-space: pre-wrap
+}
+
+.lumina-resource-field-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 11px 8px;
+    border: 0;
+    border-top: 1px solid #f0f2f6;
+    background: white;
+    text-align: left;
+    color: var(--lr-ink)
+}
+
+.lumina-resource-field-row.clickable {
+    cursor: pointer
+}
+
+.lumina-resource-field-row.clickable:hover,
+.lumina-resource-entry:hover {
+    background: #fafbfe
+}
+
+.lumina-resource-field-row>div:first-child {
+    min-width: 0
+}
+
+.lumina-resource-field-row small,
+.lumina-resource-field-row strong,
+.lumina-resource-field-row span {
+    display: block
+}
+
+.lumina-resource-field-row small {
+    font-size: 10px;
+    color: #8b95a5;
+    margin-bottom: 3px
+}
+
+.lumina-resource-field-row strong {
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere
+}
+
+.lumina-resource-field-row span {
+    font-size: 10px;
+    color: #98a1af;
+    margin-top: 4px
+}
+
+.lumina-resource-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 13px 8px;
+    border-top: 1px solid #f0f2f6
+}
+
+.lumina-resource-entry>div:first-child {
+    min-width: 0
+}
+
+.lumina-resource-entry strong {
+    font-size: 12px
+}
+
+.lumina-resource-entry p {
+    font-size: 11px;
+    color: #687386;
+    margin: 4px 0
+}
+
+.lumina-resource-entry small {
+    font-size: 10px;
+    color: #98a1af
+}
+
+.lumina-resource-entry em {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #b97818;
+    font-style: normal;
+    margin-top: 7px
+}
+
+.lumina-resource-entry-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: none
+}
+
+.lumina-resource-entry-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: 0;
+    background: none;
+    color: var(--lr-primary);
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer
+}
+
+.lumina-resource-entry-actions>small {
+    color: #8993a3
+}
+
+.lumina-resource-not-found {
+    background: white;
+    border: 1px solid var(--lr-border);
+    padding: 30px;
+    border-radius: 14px
+}
+
+.lumina-resource-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, .36);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end
+}
+
+.lumina-resource-drawer {
+    width: 470px;
+    max-width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 40px #18243b20
+}
+
+.lumina-resource-drawer-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 22px 23px 17px;
+    border-bottom: 1px solid var(--lr-border)
+}
+
+.lumina-resource-drawer-head h2 {
+    font-size: 18px;
+    margin: 5px 0
+}
+
+.lumina-resource-drawer-head p {
+    font-size: 11px;
+    color: var(--lr-muted);
+    margin: 0
+}
+
+.lumina-resource-icon-btn {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--lr-border);
+    background: white;
+    border-radius: 8px;
+    cursor: pointer
+}
+
+.lumina-resource-drawer-content {
+    padding: 20px 23px;
+    overflow: auto;
+    flex: 1
+}
+
+.lumina-resource-status-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px
+}
+
+.lumina-resource-status-line>span:last-child {
+    font-size: 11px;
+    color: #8791a1
+}
+
+.lumina-resource-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    margin-bottom: 14px;
+    color: #465165
+}
+
+.lumina-resource-label input,
+.lumina-resource-label textarea,
+.lumina-resource-label select {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 11px;
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    outline: 0;
+    font-size: 12px;
+    color: var(--lr-ink);
+    background: #fff
+}
+
+.lumina-resource-label input:focus,
+.lumina-resource-label textarea:focus,
+.lumina-resource-label select:focus {
+    border-color: #aaa5f1;
+    box-shadow: 0 0 0 3px #4f46e512
+}
+
+.lumina-resource-label textarea {
+    resize: vertical
+}
+
+.lumina-resource-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px
+}
+
+.lumina-resource-original {
+    margin: 20px 0 13px;
+    padding: 13px;
+    background: var(--lr-soft);
+    border-radius: 9px
+}
+
+.lumina-resource-original span {
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .8px;
+    color: #8993a3
+}
+
+.lumina-resource-original p {
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    margin: 8px 0
+}
+
+.lumina-resource-original small {
+    font-size: 10px;
+    color: #8a94a4
+}
+
+.lumina-resource-note {
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+    background: #fff7e9;
+    color: #a86c18;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 11px
+}
+
+.lumina-resource-error {
+    color: #c43c45;
+    font-size: 11px
+}
+
+.lumina-resource-page.pf {
+    max-width: none;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.lumina-resource-page.pf .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.lumina-resource-page.pf .lumina-resource-detail-hero {
+    margin-bottom: 15px;
+    padding: 14px;
+}
+
+.lumina-resource-page.pf .lumina-resource-detail-title h1 {
+    font-size: 24px;
+}
+
+.lumina-resource-page.pf .lumina-resource-detail-title p {
+    font-size: 12.5px;
+}
+
+.lumina-resource-detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.lumina-resource-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid #b42318;
+    border-radius: 8px;
+    background: #b42318;
+    color: #fff;
+    font-size: 120px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 140px;
+
+}
+
+.lumina-resource-delete-button:hover:not(:disabled),
+.lumina-resource-delete-button:active:not(:disabled) {
+    border-color: #912018;
+    background: #912018;
+    color: #fff;
+}
+
+.lumina-resource-delete-button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.lumina-resource-delete-backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(23, 32, 51, 0.48);
+    backdrop-filter: blur(2px);
+}
+
+.lumina-resource-delete-modal {
+    position: relative;
+    width: min(420px, calc(100vw - 32px));
+    padding: 30px 22px 22px;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(23, 32, 51, 0.24);
+    text-align: left;
+}
+
+.lumina-resource-delete-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border: 1px solid #e4e7ec;
+    border-radius: 8px;
+    background: #fff;
+    color: #667085;
+    cursor: pointer;
+}
+
+.lumina-resource-delete-modal-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 12px;
+    place-items: center;
+    border-radius: 12px;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.lumina-resource-delete-modal h2 {
+    margin: 0 0 8px;
+    color: #172033;
+    font-size: 20px;
+}
+
+.lumina-resource-delete-modal p {
+    margin: 0 0 18px;
+    color: #687386;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.lumina-resource-delete-modal p strong {
+    color: #344054;
+}
+
+.lumina-resource-delete-error {
+    color: #b42318 !important;
+}
+
+.lumina-resource-delete-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+}
+
+.lumina-resource-delete-modal-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lumina-resource-delete-cancel {
+    border: 1px solid #dfe4ee;
+    background: #fff;
+    color: #344054;
+}
+
+.lumina-resource-delete-confirm {
+    border: 1px solid #b42318;
+    background: #b42318;
+    color: #fff;
+}
+
+.lumina-resource-delete-confirm:hover:not(:disabled),
+.lumina-resource-delete-confirm:active:not(:disabled) {
+    border-color: #912018;
+    background: #912018;
+    color: #fff;
+}
+
+.lumina-resource-page.pf .lumina-resource-stats.detail {
+    margin: 15px 0;
+}
+
+.lumina-resource-page.pf .nav {
+    margin-bottom: 0;
+}
+
+.lumina-resource-page.pf .tools {
+    margin: 10px 0 18px;
+}
+
+.lumina-resource-page.pf .sec-t h2 {
+    font-size: 17px;
+}
+
+.lumina-resource-page.pf .nav .tab.active {
+    border-color: var(--pri);
+    background: var(--pri);
+    color: #fff;
+}
+
+.lumina-resource-page.pf .nav .tab.active span {
+    color: #fff;
+}
+
+.lumina-resource-read-row {
+    position: relative;
+    padding: 13px 12px;
+    margin-bottom: 7px;
+    border: 1px solid #e3e7ef;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.lumina-resource-read-row:last-child {
+    margin-bottom: 0;
+}
+
+.lumina-resource-read-row h3 {
+    margin: 0;
+    color: #171a21;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.lumina-resource-read-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 6px;
+    color: #697184;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.lumina-resource-read-row.review {
+    border-left: 3px solid #d9a036;
+}
+
+.lumina-resource-read-row.review>.bd {
+    display: inline-flex;
+    margin-top: 8px;
+}
+
+.lumina-resource-skills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 0 6px;
+}
+
+.lumina-resource-read-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-height: 34px;
+    padding: 7px 14px;
+    border: 1px solid #dce2ea;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: default;
+}
+
+.lumina-resource-read-chip-review {
+    border-color: #eccb89;
+    background: #fffaf0;
+}
+
+.lumina-resource-read-chip-review .bd {
+    padding: 2px 7px;
+    font-size: 10px;
+}
+
+.lumina-resource-page.pf .lumina-resource-profile-row {
+    cursor: default;
+}
+
+.lumina-resource-page.pf .lumina-resource-profile-row:hover {
+    border-color: #e8ecf2;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: none;
+    transform: none;
+}
+
+.lumina-resource-page.pf .lumina-resource-read-chip {
+    cursor: default;
+}
+
+.lumina-resource-page.pf .lumina-resource-read-chip:hover,
+.lumina-resource-page.pf .lumina-resource-read-chip.warn:hover {
+    border-color: #dce2ea;
+    background: rgba(255, 255, 255, 0.88);
+    color: #1e293b;
+    box-shadow: none;
+    transform: none;
+}
+
+.lumina-resource-page.pf .lumina-resource-read-chip.warn,
+.lumina-resource-page.pf .lumina-resource-read-chip.warn:hover {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.lumina-resource-inline-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: none;
+    color: var(--lr-primary);
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer
+}
+
+.lumina-resource-drawer-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--lr-border)
+}
+
+.lumina-resource-drawer-foot>div {
+    display: flex;
+    gap: 7px
+}
+
+.lumina-resource-delete {
+    border: 0;
+    background: none;
+    color: #c43c45;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer
+}
+
+.lumina-resource-drawer-foot .lumina-resource-btn {
+    font-size: 11px;
+    padding: 0 10px;
+    min-height: 35px
+}
+
+@media(max-width:900px) {
+    .lumina-resource-detail-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .lumina-resource-page {
+        padding: 23px 20px 45px
+    }
+
+    .lumina-resource-detail-hero {
+        align-items: flex-start;
+        flex-direction: column
+    }
+
+    .lumina-resource-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .lumina-resource-toolbar.detail .lumina-resource-search {
+        width: 100%
+    }
+}
+
+@media(max-width:600px) {
+    .lumina-resource-page {
+        padding: 18px 13px 40px
+    }
+
+    .lumina-resource-page-heading {
+        align-items: flex-start;
+        flex-direction: column
+    }
+
+    .lumina-resource-page h1 {
+        font-size: 25px
+    }
+
+    .lumina-resource-page-heading>.lumina-resource-btn {
+        align-self: stretch
+    }
+
+    .lumina-resource-panel-head {
+        padding: 16px 13px 12px
+    }
+
+    .lumina-resource-toolbar {
+        padding: 0 13px 13px
+    }
+
+    .lumina-resource-search {
+        width: 100%
+    }
+
+    .lumina-resource-select {
+        flex: 1
+    }
+
+    .lumina-resource-extracted {
+        padding: 0 10px 10px
+    }
+
+    .lumina-resource-extracted>.lumina-resource-panel-head {
+        padding-left: 2px;
+        padding-right: 2px
+    }
+
+    .lumina-resource-toolbar.detail {
+        padding: 0 2px 12px
+    }
+
+    .lumina-resource-filter-chips {
+        width: 100%
+    }
+
+    .lumina-resource-expand {
+        margin-left: 0
+    }
+
+    .lumina-resource-detail-title h1 {
+        font-size: 17px
+    }
+
+    .lumina-resource-actions {
+        width: 100%
+    }
+
+    .lumina-resource-actions .lumina-resource-btn {
+        flex: 1
+    }
+
+    .lumina-resource-jumps {
+        gap: 5px
+    }
+
+    .lumina-resource-jumps button {
+        padding: 7px 8px;
+        font-size: 10px
+    }
+
+    .lumina-resource-entry {
+        flex-direction: column
+    }
+
+    .lumina-resource-entry-actions {
+        width: 100%;
+        justify-content: flex-end
+    }
+
+    .lumina-resource-field-row {
+        align-items: flex-start
+    }
+
+    .lumina-resource-field-row .lumina-resource-entry-actions {
+        gap: 5px
+    }
+
+    .lumina-resource-drawer {
+        width: 100%
+    }
+
+    .lumina-resource-drawer-head,
+    .lumina-resource-drawer-content {
+        padding-left: 17px;
+        padding-right: 17px
+    }
+
+    .lumina-resource-drawer-foot {
+        padding: 12px 14px;
+        flex-wrap: wrap
+    }
+
+    .lumina-resource-drawer-foot>div {
+        flex: 1;
+        justify-content: flex-end
+    }
+
+    .lumina-resource-drawer-foot .lumina-resource-btn {
+        padding: 0 8px
+    }
+
+    .lumina-resource-two-col {
+        gap: 8px
+    }
+}

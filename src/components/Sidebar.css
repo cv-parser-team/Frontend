@@ -1,0 +1,407 @@
+
+/* ==============================
+   SIDEBAR CONTAINER
+================================= */
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sidebar {
+  width: 229px;
+  min-width: 229px;
+  height: 100vh;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  transition: transform 0.3s ease;
+}
+
+/* ==============================
+   BRAND / LOGO
+================================= */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 48px 23px 39px;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: #ffffff;
+
+  border-radius: 8px;
+}
+
+.brand-text h2 {
+  margin: 0;
+
+  color: #172344;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+}
+
+.brand-text span {
+  display: block;
+  margin-top: 3px;
+
+  color: #687997;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ==============================
+   WORKSPACE LABEL
+================================= */
+
+.workspace-label {
+  padding: 0 16px;
+  margin-bottom: 16px;
+
+  color: #8b98af;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ==============================
+   NAVIGATION
+================================= */
+
+.sidebar-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  padding: 0 16px;
+}
+
+.sidebar-link {
+  width: 100%;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 12px;
+
+  border-radius: 7px;
+
+  color: #151515;
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 550;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.sidebar-link-icon {
+  flex-shrink: 0;
+  color: #59677e;
+}
+
+.sidebar-link-label {
+  white-space: nowrap;
+}
+
+/* Hover */
+
+.sidebar-link:hover {
+  background-color: #f5f5ff;
+  color: #5146f5;
+}
+
+.sidebar-link:hover .sidebar-link-icon {
+  color: #5146f5;
+}
+
+/* Active Link */
+
+.sidebar-link.active {
+  background-color: #eeedff;
+  color: #5146f5;
+}
+
+.sidebar-link.active .sidebar-link-icon {
+  color: #5146f5;
+}
+
+/* ==============================
+   NAVIGATION COUNTERS
+================================= */
+
+.sidebar-count {
+  margin-left: auto;
+
+  color: #111827;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.review-count {
+  padding: 2px 9px;
+
+  border-radius: 12px;
+
+  background-color: #fff1c4;
+  color: #956300;
+
+  font-size: 10px;
+}
+
+.issue-count {
+  min-width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: #fde5c2;
+  color: #8a4a07;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ==============================
+   USER PROFILE
+================================= */
+
+.sidebar-account {
+  margin-top: auto;
+  padding: 16px;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-user:hover .user-info h3 {
+  color: #5146f5;
+}
+
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f1d8d8;
+  border-radius: 9px;
+  background: #fff8f8;
+  color: #a33b43;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sidebar-logout:hover {
+  border-color: #e7b6b8;
+  background: #fff0f0;
+  color: #8d242d;
+  transform: translateY(-1px);
+}
+
+.sidebar-logout:focus-visible {
+  outline: 2px solid #d15c63;
+  outline-offset: 2px;
+}
+
+.sidebar-logout:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+.sidebar-logout-modal-message {
+  margin-bottom: 20px;
+}
+
+.sidebar-logout-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.sidebar-logout-modal-actions button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid #dfe4ec;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sidebar-logout-cancel {
+  background: #fff;
+  color: #536078;
+}
+
+.sidebar-logout-cancel:hover {
+  background: #f5f7fb;
+}
+
+.sidebar-logout-confirm {
+  border-color: #a33b43 !important;
+  background: #a33b43;
+  color: #fff;
+}
+
+.sidebar-logout-confirm:hover {
+  border-color: #8d242d !important;
+  background: #8d242d;
+}
+
+.sidebar-logout-modal-actions button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.user-avatar {
+  width: 49px;
+  height: 49px;
+  min-width: 49px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #e9eaf0;
+  color: #59677e;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-info {
+  min-width: 0;
+}
+
+.user-info h3 {
+  margin: 0;
+
+  color: #111111;
+  font-size: 15px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-info p {
+  margin: 3px 0 0;
+
+  color: #75829b;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==============================
+   MOBILE NAVIGATION
+================================= */
+
+.mobile-menu-button {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .mobile-menu-button {
+    position: fixed;
+    top: 15px;
+    left: 12px;
+    z-index: 102;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #5146f5;
+
+    cursor: pointer;
+  }
+
+  .sidebar-overlay {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+
+    background: rgba(15, 23, 42, 0.35);
+  }
+}
