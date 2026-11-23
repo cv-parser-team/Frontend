@@ -40,6 +40,51 @@ function pairKey(leftClaimId, rightClaimId) {
   return [leftClaimId, rightClaimId].sort().join(':');
 }
 
+// Put the fields that identify a claim first so duplicate comparisons can be
+// scanned quickly. Unrecognized fields are kept after the known fields in the
+// order supplied by the API, so extending a claim does not hide new data.
+const CLAIM_FIELD_ORDER = {
+  skill: ['name'],
+  language: ['name', 'proficiency'],
+  employment: [
+    'jobTitle',
+    'employer',
+    'startDate',
+    'endDate',
+    'location',
+    'skills',
+    'description',
+  ],
+  education: [
+    'degree',
+    'fieldOfStudy',
+    'institution',
+    'startDate',
+    'endDate',
+  ],
+  certification: [
+    'title',
+    'issuer',
+    'issueDate',
+    'expiryDate',
+    'credentialId',
+  ],
+  project: [
+    'name',
+    'role',
+    'startDate',
+    'endDate',
+    'url',
+    'skills',
+    'description',
+  ],
+};
+
+function fieldOrderIndex(claimType, fieldName) {
+  const index = CLAIM_FIELD_ORDER[claimType]?.indexOf(fieldName) ?? -1;
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
 export function getProposalClaims(proposal) {
   if (Array.isArray(proposal?.claims)) return proposal.claims;
 
@@ -168,7 +213,7 @@ export function buildProposalFieldMatrix(proposal) {
 
   return {
     claims,
-    fields: [...fields.entries()].map(([fieldName, field]) => {
+    fields: [...fields.entries()].map(([fieldName, field], originalIndex) => {
       const values = Object.fromEntries(
         claims.map((claim) => [
           claim.claimId,
@@ -192,11 +237,16 @@ export function buildProposalFieldMatrix(proposal) {
         fieldName,
         values,
         requiresChoice,
+        originalIndex,
         isArrayField:
           Object.values(values).some(Array.isArray) ||
           fieldName.toLowerCase().includes('skill'),
       };
-    }),
+    }).sort((left, right) =>
+      fieldOrderIndex(proposal?.claimType, left.fieldName) -
+        fieldOrderIndex(proposal?.claimType, right.fieldName) ||
+      left.originalIndex - right.originalIndex
+    ).map(({ originalIndex: _originalIndex, ...field }) => field),
   };
 }
 
